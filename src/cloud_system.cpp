@@ -1,9 +1,12 @@
 #include "cloud_system.h"
+#include "cloud_scene.h"
 
 #include "engine/engine.h"
 #include "engine/iallocator.h"
+#include "engine/base_proxy_allocator.h"
 #include "engine/property_register.h"
 #include "engine/log.h"
+#include "engine/universe/universe.h"
 
 
 namespace Lumix
@@ -32,6 +35,19 @@ namespace Lumix
 		void update(float deltaTime) override
 		{
 			//g_log_info.log("CloudSystem") << "update";
+		}
+
+
+		void createScenes(Universe& universe) override
+		{
+			auto* scene = CloudScene::createInstance(*this, universe, m_engine.getAllocator());
+			universe.addScene(scene);
+		}
+
+
+		void destroyScene(IScene* scene) override
+		{
+			CloudScene::destroyInstance(static_cast<CloudScene*>(scene));
 		}
 
 

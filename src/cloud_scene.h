@@ -8,8 +8,9 @@ namespace Lumix
 {
 
 
-	/*class CloudScene : public IScene
+	class CloudScene : public IScene
 	{
+	public:
 
 		static CloudScene* createInstance(CloudSystem& system,
 			Universe& universe,
@@ -17,7 +18,7 @@ namespace Lumix
 
 		static void destroyInstance(CloudScene* scene);
 
-	};*/
+	};
 
 
 } // namespace Lumix
