@@ -2,6 +2,7 @@
 
 #include "engine/iplugin.h"
 #include "cloud_system.h"
+#include "engine/vec.h"
 
 
 namespace Lumix
@@ -17,6 +18,11 @@ namespace Lumix
 			class IAllocator& allocator);
 
 		static void destroyInstance(CloudScene* scene);
+
+		virtual void setCloudSize(ComponentHandle cmp, const Vec3& size) = 0;
+		virtual Vec3 getCloudSize(ComponentHandle cmp) = 0;
+		virtual void setCloudCellCount(ComponentHandle cmp, const Vec3& count) = 0;
+		virtual Vec3 getCloudCellCount(ComponentHandle cmp) = 0;
 
 	};
 

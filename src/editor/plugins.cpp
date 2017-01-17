@@ -5,5 +5,5 @@
 
 LUMIX_STUDIO_ENTRY(LumixCloudSystem)
 {
-	
+	app.registerComponent("cloud", "Cloud blob");
 }
