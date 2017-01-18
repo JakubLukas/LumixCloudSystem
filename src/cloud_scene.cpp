@@ -81,19 +81,19 @@ struct Cloud
 
 				Cloud& cloud = m_clouds[entity];
 				cloud.entity = entity;
-				cloud.size = Vec3(10, 5, 10);
-				cloud.cell_count_x = 10;
-				cloud.cell_count_y = 5;
-				cloud.cell_count_z = 10;
-				setupCloudNodeCount(cloud);
+				//cloud.size = Vec3(1000, 50, 1000);
+				//cloud.cell_count_x = 1000;
+				//cloud.cell_count_y = 50;
+				//cloud.cell_count_z = 1000;
+				//setupCloudNodeCount(cloud);
 
-				Environment enviroment{ Lumix::Vec3(0.01f, 0, 0) };
+				Environment enviroment{ Lumix::Vec3(0, 0, -40) };
 				CloudProperties cloudProps{
-					10,
-					10,
-					5,
-					1,
-					0.1f,
+					800,
+					300,
+					80,
+					12,
+					0.2f,
 					Lumix::Vec3(0, 0, 0)
 				};
 				cloud.luckyCloud.Setup(&enviroment, &cloudProps);
@@ -183,7 +183,7 @@ struct Cloud
 						+ (u32(pCurParticle->m_cScatteringColor.x * 0xff) << 16)
 						+ (u32(pCurParticle->m_cScatteringColor.y * 0xff) << 8)
 						+ (u32(pCurParticle->m_cScatteringColor.z * 0xff));
-					render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 0.4f, color, 0);
+					render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 12.0f, color, 0);
 					pCurParticle = Enumerator.NextParticle();
 				}
 			}

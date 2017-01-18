@@ -24,12 +24,6 @@
 
 #pragma once
 
-
-//#include <vector>
-
-//#include <d3d9.h>
-//#include <d3dx9.h>
-
 #include "engine/lumix.h"
 #include "engine/vec.h"
 
@@ -39,7 +33,6 @@
 #include <smmintrin.h>
 
 #include "Utils.inl"
-#include <stdlib.h>
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -51,14 +44,8 @@
 #define SQUARE(r)		((r)*(r))
 
 
-
-//namespace Lumix
-//{
-
-
 class CSimulationSpace
 {
-	friend class Geometry;
 
 public:
 	int 			m_iLength;
@@ -118,6 +105,3 @@ protected:
 	void			CelluarAutomate(unsigned int uPhaseIndex);
 	void			CalculateDensity(unsigned int uPhaseIndex);
 };
-
-
-//}
