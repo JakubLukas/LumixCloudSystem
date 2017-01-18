@@ -28,7 +28,6 @@
 #include "Simulation.h"
 //#include "Camera.h"
 
-using namespace std;
 
 //extern Camera*  gCamera;
 //extern D3DXVECTOR3*	g_pvViewpoint;
@@ -45,18 +44,18 @@ float Phase(Lumix::Vec3 vIn, Lumix::Vec3 vOut )
 {
 	vIn.normalize();
 	vOut.normalize();
-    return (float)(( 1.0 + SQUARE( vIn.x * vOut.x + vIn.y * vOut.y + vIn.z * vOut.z) )* 3.0/4.0);
+	return (1.0f + SQUARE(vIn.x * vOut.x + vIn.y * vOut.y + vIn.z * vOut.z)) * 3.0f / 4.0f;
 }
 
-CVolumetricCloud::CVolumetricCloud():
-    m_fLength( 0.f ),
-    m_fWidth( 0.f ),
-    m_fHigh( 0.f ),
-    m_fCellSize( 0.f ),
-    m_iLength( 0 ),
-    m_iWidth( 0 ),
-    m_iHigh( 0 ),
-    m_fTimeA(0)
+CVolumetricCloud::CVolumetricCloud()
+	: m_fLength(0.0f)
+	, m_fWidth(0.0f)
+	, m_fHigh(0.0f)
+	, m_fCellSize(0.0f)
+	, m_iLength(0)
+	, m_iWidth(0)
+	, m_iHigh(0)
+	, m_fTimeA(0.0)
 {
     //for double buffer implementation
     //m_iColorUpdateInterval[0] = 0;
@@ -96,11 +95,10 @@ bool CVolumetricCloud::Setup( /*LPDIRECT3DDEVICE9 pDevice,*/ Environment *Env, C
 
     //m_vViewpoint = *g_pvViewpoint;
 
-	result &= m_Simulator.Setup( m_iLength, m_iWidth, m_iHigh );
+	result &= m_Simulator.Setup( m_iLength, m_iWidth, m_iHigh);
 	result &= GenerateCloudParticles();
 	//result &= m_CloudShader.Setup( this, (float)1.2*m_fCellSize, 200 );
-
-    m_ParticlePool.m_vWindVelocity = Env->vWindVelocity;
+	m_ParticlePool.m_vWindVelocity = Env->vWindVelocity;
 
 
     return true;
@@ -350,24 +348,27 @@ inline __m128 OpticalLength_SSE(__m128 fLineDensity)
 
 bool CVolumetricCloud::GenerateCloudParticles()
 {
-    bool ret;
-    ret = m_ParticlePool.Setup( this, m_Simulator.GetNumCellInVolume() );
-    if( !ret ) return false;
-    for( int i = 0; i < m_iLength; i++ )
-    {
-        for( int j = 0; j < m_iHigh; j++)
-        {
-            for( int k = 0; k < m_iWidth; k++ )
-            {
-                if( m_Simulator.IsCellInVolume(i,j,k) )
-                {
-                    ret = m_ParticlePool.AddParticle(i,j,k);
-                    if( !ret ) return false;
-                }
-            }
-        }
-    }
-    return true;
+	bool ret;
+	ret = m_ParticlePool.Setup(this, m_Simulator.GetNumCellInVolume());
+	if (!ret)
+		return false;
+
+	for (int i = 0; i < m_iLength; ++i)
+	{
+		for (int j = 0; j < m_iHigh; ++j)
+		{
+			for (int k = 0; k < m_iWidth; ++k)
+			{
+				if (m_Simulator.IsCellInVolume(i, j, k))
+				{
+					ret = m_ParticlePool.AddParticle(i, j, k);
+					if (!ret)
+						return false;
+				}
+			}
+		}
+	}
+	return true;
 }
 
 /*void CVolumetricCloud::UpdateCloudParticleColors()
@@ -400,6 +401,30 @@ void CVolumetricCloud::UpdateCloudPosition(double fTime)
 		m_vCloudPos.z += 1500;
 
     m_fTime = fTime;
+
+
+
+
+		CParticleEnumerator Enumerator(&m_ParticlePool);
+		CloudParticle *pCurParticle = Enumerator.NextParticle();
+		while (pCurParticle)
+		{
+			Lumix::Vec3 curPartPos = Lumix::Vec3((float)pCurParticle->m_i, (float)pCurParticle->m_j, (float)pCurParticle->m_k);
+			if (m_Simulator.IsPointInSpace(&curPartPos))
+			{
+				float fDensity = m_Simulator.GetPointDensity(&curPartPos);
+				pCurParticle->m_cScatteringColor.x = fDensity;
+				pCurParticle->m_cScatteringColor.y = fDensity;
+				pCurParticle->m_cScatteringColor.z = fDensity;
+			}
+
+			pCurParticle = Enumerator.NextParticle();
+		}
+
+
+
+
+
 }
 
 /*void CVolumetricCloud::Render()

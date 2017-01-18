@@ -44,18 +44,18 @@ class CParticleEnumerator;
 class CloudParticle
 {
 public:
-    CParticlePool*	m_pParticlePool;
-    unsigned int	m_i,m_j,m_k;
+	CParticlePool*	m_pParticlePool;
+	unsigned int	m_i,m_j,m_k;
 	unsigned int	m_uIndex;
-    //D3DCOLOR		m_cScatteringColor;
-    bool			m_bVisible;
+	Lumix::Vec3		m_cScatteringColor;
+	bool			m_bVisible;
 public:
-    CloudParticle();
-    CloudParticle(unsigned int i, unsigned int j, unsigned int k, CParticlePool *pParticlePool);
-    ~CloudParticle();
-    Lumix::Vec3* GetPosition();
+	CloudParticle();
+	CloudParticle(unsigned int i, unsigned int j, unsigned int k, CParticlePool* pParticlePool);
+	~CloudParticle();
+	Lumix::Vec3* GetPosition();
 	Lumix::Vec3* GetPositionFromLastBuffer();
-    double		 GetViewDistance();
+	double GetViewDistance();
 };
 
 

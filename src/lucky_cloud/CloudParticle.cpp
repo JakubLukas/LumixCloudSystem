@@ -23,17 +23,15 @@
 //-------------------------------------------------------------------------------------
 
 
-//#include "DXUT.h"
 #include "CloudParticle.h"
 #include "VolumetricCloud.h"
 
 #include "engine/lumix.h"
 
-using namespace std;
 
 CloudParticle::CloudParticle()
 {
-    memset( this,0,sizeof(CloudParticle) );
+	memset(this, 0, sizeof(CloudParticle));
 }
 
 CloudParticle::CloudParticle(unsigned int i, unsigned int j, unsigned int k, CParticlePool *pParticlePool)
@@ -52,46 +50,47 @@ CloudParticle::~CloudParticle()
 
 Lumix::Vec3* CloudParticle::GetPosition()
 {
-    //Update thread, get data from current buffer
-	ASSERT( m_pParticlePool && m_pParticlePool->m_pvPositions[m_pParticlePool->m_iCurrentBuffer] );
-    return &( m_pParticlePool->m_pvPositions[m_pParticlePool->m_iCurrentBuffer][m_uIndex] );
+	//Update thread, get data from current buffer
+	ASSERT(m_pParticlePool && m_pParticlePool->m_pvPositions[m_pParticlePool->m_iCurrentBuffer]);
+	return &(m_pParticlePool->m_pvPositions[m_pParticlePool->m_iCurrentBuffer][m_uIndex]);
 }
 
 Lumix::Vec3* CloudParticle::GetPositionFromLastBuffer()
 {
-    //Render thread, get data from last buffer
-	ASSERT( m_pParticlePool && m_pParticlePool->m_pvPositions[1-m_pParticlePool->m_iCurrentBuffer] );
-    return &( m_pParticlePool->m_pvPositions[1-m_pParticlePool->m_iCurrentBuffer][m_uIndex] );
+	//Render thread, get data from last buffer
+	ASSERT(m_pParticlePool && m_pParticlePool->m_pvPositions[1 - m_pParticlePool->m_iCurrentBuffer]);
+	return &(m_pParticlePool->m_pvPositions[1 - m_pParticlePool->m_iCurrentBuffer][m_uIndex]);
 }
 
 double CloudParticle::GetViewDistance()
 {
-	ASSERT( m_pParticlePool && m_pParticlePool->m_pfViewDistances );
-    return m_pParticlePool->m_pfViewDistances[m_uIndex];
+	ASSERT(m_pParticlePool && m_pParticlePool->m_pfViewDistances);
+	return m_pParticlePool->m_pfViewDistances[m_uIndex];
 }
+
+
 
 CParticlePool::CParticlePool()
 	: m_uNumParticles(0)
-	, m_pfViewDistances(NULL)
-	, m_pVolumetricCloud(NULL)
+	, m_pfViewDistances(nullptr)
+	, m_pVolumetricCloud(nullptr)
 	, m_iCurrentBuffer(0)
 {
-    //these are for double buffer implementation
-    m_pvPositions[0] = NULL;
-    m_pvPositions[1] = NULL;
-    m_PreTime[0] = 0.0;
-    m_PreTime[1] = 0.0;
+	//these are for double buffer implementation
+	m_pvPositions[0] = nullptr;
+	m_pvPositions[1] = nullptr;
+	m_PreTime[0] = 0.0;
+	m_PreTime[1] = 0.0;
 }
-    
+
 CParticlePool::~CParticlePool()
 {
 }
 
 
-
-bool  CompareViewDistance( CloudParticle* pElem1, CloudParticle* pElem2)
+bool CompareViewDistance(CloudParticle* pElem1, CloudParticle* pElem2)
 {
-    return ( pElem1->GetViewDistance() > pElem2->GetViewDistance() );
+	return (pElem1->GetViewDistance() > pElem2->GetViewDistance());
 }
 
 
@@ -156,13 +155,13 @@ void CParticlePool::Cleanup()
     if( m_pvPositions[1] )
         delete[] m_pvPositions[1];
 
-    vector< CloudParticle* >::iterator itCurCP, itEndCP = m_v_pCloudParticles[0].end();
+    std::vector< CloudParticle* >::iterator itCurCP, itEndCP = m_v_pCloudParticles[0].end();
     for( itCurCP = m_v_pCloudParticles[0].begin(); itCurCP != itEndCP; ++ itCurCP )
     {
         delete ( * itCurCP );
     }
     m_v_pCloudParticles[0].clear();
-    vector< CloudParticle* >::iterator itCurCP2, itEndCP2 = m_v_pCloudParticles[1].end();
+		std::vector< CloudParticle* >::iterator itCurCP2, itEndCP2 = m_v_pCloudParticles[1].end();
     for( itCurCP2 = m_v_pCloudParticles[1].begin(); itCurCP2 != itEndCP2; ++ itCurCP2 )
     {
         delete ( * itCurCP2 );

@@ -13,6 +13,7 @@
 
 //////////////////////////
 #include "lucky_cloud/VolumetricCloud.h"
+#include "lucky_cloud/CloudParticle.h"
 
 
 namespace Lumix
@@ -76,7 +77,9 @@ struct Cloud
 		{
 			if(type == CLOUD_TYPE)
 			{
-				Cloud cloud(m_allocator);
+				m_clouds.insert(entity, Cloud(m_allocator));
+
+				Cloud& cloud = m_clouds[entity];
 				cloud.entity = entity;
 				cloud.size = Vec3(10, 5, 10);
 				cloud.cell_count_x = 10;
@@ -84,7 +87,7 @@ struct Cloud
 				cloud.cell_count_z = 10;
 				setupCloudNodeCount(cloud);
 
-				Environment enviroment{ Lumix::Vec3(1, 0, 0) };
+				Environment enviroment{ Lumix::Vec3(0.01f, 0, 0) };
 				CloudProperties cloudProps{
 					10,
 					10,
@@ -95,7 +98,6 @@ struct Cloud
 				};
 				cloud.luckyCloud.Setup(&enviroment, &cloudProps);
 
-				m_clouds.insert(entity, cloud);
 				ComponentHandle cmp = { entity.index };
 				m_universe.addComponent(entity, type, this, cmp);
 				return cmp;
@@ -139,7 +141,7 @@ struct Cloud
 		void startGame() override { } //TODO
 		void stopGame() override { } //TODO
 
-		void debugDraw() const
+		void debugDraw()
 		{
 			auto render_scene = static_cast<RenderScene*>(m_universe.getScene(crc32("renderer")));
 			if(!render_scene) return;
@@ -156,8 +158,8 @@ struct Cloud
 
 			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
 			{
-				const Cloud& cloud = iter.value();
-				Vec3 pos = m_universe.getPosition(cloud.entity);
+				Cloud& cloud = iter.value();
+				/*Vec3 pos = m_universe.getPosition(cloud.entity);
 				Vec3 cell_size(
 					cloud.size.x / cloud.cell_count_x,
 					cloud.size.y / cloud.cell_count_y,
@@ -170,7 +172,20 @@ struct Cloud
 						{
 							Vec3 nodePos = pos + Vec3(x*cell_size.x, y*cell_size.y, z*cell_size.z);
 							render_scene->addDebugCircle(nodePos, dir, sphere_radius, 0x0f00aaff, 0);
-						}
+						}*/
+
+
+				CParticleEnumerator Enumerator(&cloud.luckyCloud.m_ParticlePool);
+				CloudParticle *pCurParticle = Enumerator.NextParticle();
+				while (pCurParticle)
+				{
+					u32 color = 0xff000000
+						+ (u32(pCurParticle->m_cScatteringColor.x * 0xff) << 16)
+						+ (u32(pCurParticle->m_cScatteringColor.y * 0xff) << 8)
+						+ (u32(pCurParticle->m_cScatteringColor.z * 0xff));
+					render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 0.4f, color, 0);
+					pCurParticle = Enumerator.NextParticle();
+				}
 			}
 		}
 
