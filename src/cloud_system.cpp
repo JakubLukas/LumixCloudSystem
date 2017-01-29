@@ -23,6 +23,13 @@ static void registerProperties(Lumix::IAllocator& allocator)
 		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec3, CloudScene>)("Cell Count",
 			&CloudScene::getCloudCellCount,
 			&CloudScene::setCloudCellCount));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Evolution Speed",
+			&CloudScene::getEvolutionSpeed,
+			&CloudScene::setEvolutionSpeed,
+			0.0f,
+			1.0f,
+			0.1f));
 }
 
 

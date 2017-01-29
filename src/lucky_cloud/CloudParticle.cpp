@@ -24,7 +24,7 @@
 
 
 #include "CloudParticle.h"
-#include "VolumetricCloud.h"
+#include "volumetric_cloud.h"
 
 #include "engine/lumix.h"
 
@@ -127,7 +127,7 @@ void CParticlePool::UpdateParticlePositions( double fTime )
     m_PreTime[m_iCurrentBuffer] = fTime;
 }
 
-bool CParticlePool::Setup( CVolumetricCloud *pVolumetricCloud, unsigned int uNumParticles )
+bool CParticlePool::Setup( VolumetricCloud *pVolumetricCloud, unsigned int uNumParticles )
 {
     m_pVolumetricCloud = pVolumetricCloud;
 

@@ -12,7 +12,7 @@
 
 
 //////////////////////////
-#include "lucky_cloud/VolumetricCloud.h"
+#include "lucky_cloud/volumetric_cloud.h"
 #include "lucky_cloud/CloudParticle.h"
 
 
@@ -39,7 +39,7 @@ struct Cloud
 	int cell_count_y;
 	int cell_count_z;
 	Array<Node> nodes;
-	CVolumetricCloud luckyCloud;
+	VolumetricCloud luckyCloud;
 
 	Cloud(IAllocator& allocator)
 		: nodes(allocator)
@@ -62,6 +62,7 @@ struct Cloud
 			, m_universe(universe)
 			, m_allocator(allocator)
 			, m_clouds(allocator)
+			, m_timePassed(0.0f)
 		{
 			//m_universe.entityTransformed().bind<NavigationSceneImpl, &NavigationSceneImpl::onEntityMoved>(this);
 			universe.registerComponentType(CLOUD_TYPE, this, &CloudSceneImpl::serializeCloud, &CloudSceneImpl::deserializeCloud);
@@ -93,10 +94,10 @@ struct Cloud
 					300,
 					80,
 					12,
-					0.2f,
+					0.8f,
 					Lumix::Vec3(0, 0, 0)
 				};
-				cloud.luckyCloud.Setup(&enviroment, &cloudProps);
+				cloud.luckyCloud.Setup(enviroment, cloudProps);
 
 				ComponentHandle cmp = { entity.index };
 				m_universe.addComponent(entity, type, this, cmp);
@@ -183,7 +184,8 @@ struct Cloud
 						+ (u32(pCurParticle->m_cScatteringColor.x * 0xff) << 16)
 						+ (u32(pCurParticle->m_cScatteringColor.y * 0xff) << 8)
 						+ (u32(pCurParticle->m_cScatteringColor.z * 0xff));
-					render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 12.0f, color, 0);
+					//render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 12.0f, color, 0);
+					render_scene->addDebugPoint(*pCurParticle->GetPosition(), color, 0);
 					pCurParticle = Enumerator.NextParticle();
 				}
 			}
@@ -191,8 +193,9 @@ struct Cloud
 
 		void update(float time_delta, bool paused) override
 		{
+			m_timePassed += time_delta;
 			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
-				iter.value().luckyCloud.AdvanceTime(time_delta, 0);
+				iter.value().luckyCloud.Update(m_timePassed);
 			debugDraw();
 		}
 
@@ -269,12 +272,21 @@ struct Cloud
 
 		void setCloudSize(ComponentHandle cmp, const Vec3& size) override
 		{
-			m_clouds[{cmp.index}].size = size;
+			Entity entity = { cmp.index };
+			//m_clouds[entity].size = size;
+			m_clouds[entity].luckyCloud.m_fWidth = size.x;
+			m_clouds[entity].luckyCloud.m_fHigh = size.y;
+			m_clouds[entity].luckyCloud.m_fLength = size.z;
 		}
 
 		Vec3 getCloudSize(ComponentHandle cmp) override
 		{
-			return m_clouds[{cmp.index}].size;
+			Entity entity = { cmp.index };
+			//return m_clouds[entity].size;
+			return Vec3(
+				m_clouds[entity].luckyCloud.m_fWidth,
+				m_clouds[entity].luckyCloud.m_fHigh,
+				m_clouds[entity].luckyCloud.m_fLength);
 		}
 
 
@@ -297,11 +309,25 @@ struct Cloud
 		}
 
 
+		void setEvolutionSpeed(ComponentHandle cmp, const float speed) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].luckyCloud.SetEvolvingSpeed(speed);
+		}
+
+		float getEvolutionSpeed(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].luckyCloud.GetEvolvingSpeed();
+		}
+
+
 
 		IAllocator& m_allocator;
 		Universe& m_universe;
 		CloudSystem& m_system;
 		HashMap<Entity, Cloud> m_clouds;
+		float m_timePassed;
 	};
 
 

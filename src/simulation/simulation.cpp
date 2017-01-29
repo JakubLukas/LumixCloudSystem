@@ -1,61 +1,43 @@
-//-------------------------------------------------------------------------------------
-//
-// Copyright 2009 Intel Corporation
-// All Rights Reserved
-//
-// Permission is granted to use, copy, distribute and prepare derivative works of this
-// software for any purpose and without fee, provided, that the above copyright notice
-// and this statement appear in all copies.  Intel makes no representations about the
-// suitability of this software for any purpose.  THIS SOFTWARE IS PROVIDED "AS IS."
-// INTEL SPECIFICALLY DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, AND ALL LIABILITY,
-// INCLUDING CONSEQUENTIAL AND OTHER INDIRECT DAMAGES, FOR THE USE OF THIS SOFTWARE,
-// INCLUDING LIABILITY FOR INFRINGEMENT OF ANY PROPRIETARY RIGHTS, AND INCLUDING THE
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  Intel does not
-// assume any responsibility for any errors which may appear in this software nor any
-// responsibility to update it.
-//
-//--------------------------------------------------------------------------------------
-// DXUT was adapted from the Microsoft DirectX SDK(November 2008)
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//
-// The skybox is free downloaded from :
-//   http://en.pudn.com/downloads119/sourcecode/others/detail508412_en.html
-//-------------------------------------------------------------------------------------
+#include "simulation.h"
+
+#include <string>
 
 
-#include "Simulation.h"
-#include <cstring>
-#include <cmath>
-
-
-#define SUPPLY_INTERVAL 5	//the number of frames passed supply vapoar 
-#define EXTINCT_FACTOR 0.1	
-#define fRANDOM			(((float)rand())/RAND_MAX) //this is not thread safe and will not be as random as it could be
-#define INDEX(i,j,k)	((i)*m_iHeight*m_iWidth+(j)*m_iWidth+(k))
-#define SQUARE(r)		((r)*(r))
-
-
-CSimulationSpace::CSimulationSpace()
+template<typename Type>
+void createArray(int size, Type** arrayLoc)
 {
-	memset(this, 0, sizeof(CSimulationSpace));
+	*arrayLoc = new Type[size];
+	memset(*ppBitSpace, 0, size * sizeof(Type));
+
+
+
+Simulation::Simulation()
+	: m_width(0)
+	, m_height(0)
+	, m_length(0)
+	, m_elapsedSteps(0)
+	, m_actualIndex(0)
+{
+	m_densitySpace[0] = nullptr;
+	m_densitySpace[1] = nullptr;
 }
 
 
-CSimulationSpace::~CSimulationSpace()
+Simulation::~Simulation()
 {
 	Cleanup();
 }
 
 
-bool CSimulationSpace::Setup(unsigned int uLength, unsigned int uWidth, unsigned int uHigh)
+bool Simulation::Setup(uint width, uint height, uint length)
 {
-	m_iLength = uLength;
-	m_iWidth = uWidth;
-	m_iHeight = uHigh;
-	int size = uLength * uWidth * uHigh;
-	m_uLastPhaseIndex = 0;
-	m_uNextPhaseIndex = 1;
-	m_iElapsedSteps = 0;
+	m_width = width;
+	m_height = height;
+	m_length = length;
+
+	int size = width * height * length;
+	m_actualIndex = 0;
+	m_elapsedSteps = 0;
 
 	if(NewByteSpace(size, &m_apHumSpace[0])
 		&& NewByteSpace(size, &m_apHumSpace[1])
@@ -79,30 +61,6 @@ bool CSimulationSpace::Setup(unsigned int uLength, unsigned int uWidth, unsigned
 		ShapeVolume();
 		CelluarAutomate(m_uNextPhaseIndex);
 		CalculateDensity(m_uNextPhaseIndex);
-		return true;
-	}
-	else
-		return false;
-}
-
-bool CSimulationSpace::NewByteSpace(int size, unsigned char **ppBitSpace)
-{
-	*ppBitSpace = new unsigned char[size];
-	if(*ppBitSpace)
-	{
-		memset(*ppBitSpace, 0, size * sizeof(unsigned char));
-		return true;
-	}
-	else
-		return false;
-}
-
-bool CSimulationSpace::NewFloatSpace(int size, float **ppFloatSpace)
-{
-	*ppFloatSpace = new float[size];
-	if(*ppFloatSpace)
-	{
-		memset(*ppFloatSpace, 0, size * sizeof(float));
 		return true;
 	}
 	else

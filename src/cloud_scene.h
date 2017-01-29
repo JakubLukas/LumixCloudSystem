@@ -23,6 +23,8 @@ namespace Lumix
 		virtual Vec3 getCloudSize(ComponentHandle cmp) = 0;
 		virtual void setCloudCellCount(ComponentHandle cmp, const Vec3& count) = 0;
 		virtual Vec3 getCloudCellCount(ComponentHandle cmp) = 0;
+		virtual void setEvolutionSpeed(ComponentHandle cmp, const float speed) = 0;
+		virtual float getEvolutionSpeed(ComponentHandle cmp) = 0;
 
 	};
 

@@ -36,7 +36,7 @@
 
 //-----------------------------------------------------------------------------
 // Forward declarations
-class CVolumetricCloud;
+class VolumetricCloud;
 class CParticlePool;
 class CParticleEnumerator;
 
@@ -69,11 +69,11 @@ public:
     void SortbyViewDistances(Lumix::Vec3 &vLookDir);
     void UpdateParticlePositions( double fTime );
     bool AddParticle(unsigned int i, unsigned int j, unsigned int k);
-    bool Setup( CVolumetricCloud *pVolumetricCloud, unsigned int uNumParticles );
+    bool Setup( VolumetricCloud *pVolumetricCloud, unsigned int uNumParticles );
     void Cleanup();
 
 protected:
-    CVolumetricCloud *m_pVolumetricCloud;
+    VolumetricCloud *m_pVolumetricCloud;
     std::vector< CloudParticle* >	m_v_pCloudParticles[2];
 	unsigned int			m_uNumParticles;
 	Lumix::Vec3		*m_pvPositions[2];

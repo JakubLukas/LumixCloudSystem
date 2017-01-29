@@ -1,27 +1,3 @@
-//-------------------------------------------------------------------------------------
-//
-// Copyright 2009 Intel Corporation
-// All Rights Reserved
-//
-// Permission is granted to use, copy, distribute and prepare derivative works of this
-// software for any purpose and without fee, provided, that the above copyright notice
-// and this statement appear in all copies.  Intel makes no representations about the
-// suitability of this software for any purpose.  THIS SOFTWARE IS PROVIDED "AS IS."
-// INTEL SPECIFICALLY DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, AND ALL LIABILITY,
-// INCLUDING CONSEQUENTIAL AND OTHER INDIRECT DAMAGES, FOR THE USE OF THIS SOFTWARE,
-// INCLUDING LIABILITY FOR INFRINGEMENT OF ANY PROPRIETARY RIGHTS, AND INCLUDING THE
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  Intel does not
-// assume any responsibility for any errors which may appear in this software nor any
-// responsibility to update it.
-//
-//--------------------------------------------------------------------------------------
-// DXUT was adapted from the Microsoft DirectX SDK(November 2008)
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//
-// The skybox is free downloaded from :
-//   http://en.pudn.com/downloads119/sourcecode/others/detail508412_en.html
-//-------------------------------------------------------------------------------------
-
 #pragma once
 
 #include "engine/lumix.h"
@@ -37,11 +13,8 @@
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
-#define SUPPLY_INTERVAL 5	//the number of frames passed supply vapoar 
-#define EXTINCT_FACTOR 0.1	
-#define fRANDOM			(((float)rand())/RAND_MAX) //this is not thread safe and will not be as random as it could be
-#define INDEX(i,j,k)	((i)*m_iHeight*m_iWidth+(j)*m_iWidth+(k))
-#define SQUARE(r)		((r)*(r))
+
+
 
 
 class CSimulationSpace
