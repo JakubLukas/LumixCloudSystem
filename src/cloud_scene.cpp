@@ -12,8 +12,9 @@
 
 
 //////////////////////////
-#include "lucky_cloud/volumetric_cloud.h"
-#include "lucky_cloud/CloudParticle.h"
+//#include "lucky_cloud/volumetric_cloud.h"
+//#include "lucky_cloud/CloudParticle.h"
+#include "simulation/simulation.h"
 
 
 namespace Lumix
@@ -39,7 +40,8 @@ struct Cloud
 	int cell_count_y;
 	int cell_count_z;
 	Array<Node> nodes;
-	VolumetricCloud luckyCloud;
+	//VolumetricCloud luckyCloud;
+	Simulation simulation;
 
 	Cloud(IAllocator& allocator)
 		: nodes(allocator)
@@ -88,7 +90,7 @@ struct Cloud
 				//cloud.cell_count_z = 1000;
 				//setupCloudNodeCount(cloud);
 
-				Environment enviroment{ Lumix::Vec3(0, 0, -40) };
+				/*Environment enviroment{ Lumix::Vec3(0, 0, -40) };
 				CloudProperties cloudProps{
 					800,
 					300,
@@ -97,7 +99,8 @@ struct Cloud
 					0.8f,
 					Lumix::Vec3(0, 0, 0)
 				};
-				cloud.luckyCloud.Setup(enviroment, cloudProps);
+				cloud.luckyCloud.Setup(enviroment, cloudProps);*/
+				cloud.simulation.Setup(30, 10, 30);
 
 				ComponentHandle cmp = { entity.index };
 				m_universe.addComponent(entity, type, this, cmp);
@@ -176,7 +179,7 @@ struct Cloud
 						}*/
 
 
-				CParticleEnumerator Enumerator(&cloud.luckyCloud.m_ParticlePool);
+				/*CParticleEnumerator Enumerator(&cloud.luckyCloud.m_ParticlePool);
 				CloudParticle *pCurParticle = Enumerator.NextParticle();
 				while (pCurParticle)
 				{
@@ -187,15 +190,36 @@ struct Cloud
 					//render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 12.0f, color, 0);
 					render_scene->addDebugPoint(*pCurParticle->GetPosition(), color, 0);
 					pCurParticle = Enumerator.NextParticle();
+				}*/
+
+				const float* densitySpace = cloud.simulation.GetDensitySpace();
+				for(int x = 0; x < cloud.simulation.GetWidth(); ++x)
+				{
+					for(int y = 0; y < cloud.simulation.GetHeight(); ++y)
+					{
+						for(int z = 0; z < cloud.simulation.GetLength(); ++z)
+						{
+							float dens = densitySpace[cloud.simulation.GetIndex(x, y, z)];
+							u32 color = 0xff000000
+								+ (u32(dens * 0xff) << 16)
+								+ (u32(dens * 0xff) << 8)
+								+ (u32(dens * 0xff));
+							render_scene->addDebugPoint(Vec3((float)x, (float)y, (float)z), color, 0);
+						}
+					}
 				}
 			}
 		}
 
 		void update(float time_delta, bool paused) override
 		{
-			m_timePassed += time_delta;
+			if(paused)
+				return;
+
+			//m_timePassed += time_delta;
 			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
-				iter.value().luckyCloud.Update(m_timePassed);
+				//iter.value().luckyCloud.Update(m_timePassed);
+				iter.value().simulation.Update(time_delta);
 			debugDraw();
 		}
 
@@ -274,9 +298,9 @@ struct Cloud
 		{
 			Entity entity = { cmp.index };
 			//m_clouds[entity].size = size;
-			m_clouds[entity].luckyCloud.m_fWidth = size.x;
-			m_clouds[entity].luckyCloud.m_fHigh = size.y;
-			m_clouds[entity].luckyCloud.m_fLength = size.z;
+			//m_clouds[entity].luckyCloud.m_fWidth = size.x;
+			//m_clouds[entity].luckyCloud.m_fHigh = size.y;
+			//m_clouds[entity].luckyCloud.m_fLength = size.z;
 		}
 
 		Vec3 getCloudSize(ComponentHandle cmp) override
@@ -284,9 +308,9 @@ struct Cloud
 			Entity entity = { cmp.index };
 			//return m_clouds[entity].size;
 			return Vec3(
-				m_clouds[entity].luckyCloud.m_fWidth,
-				m_clouds[entity].luckyCloud.m_fHigh,
-				m_clouds[entity].luckyCloud.m_fLength);
+				(float)m_clouds[entity].simulation.GetWidth(),
+				(float)m_clouds[entity].simulation.GetHeight(),
+				(float)m_clouds[entity].simulation.GetLength());
 		}
 
 
@@ -312,13 +336,14 @@ struct Cloud
 		void setEvolutionSpeed(ComponentHandle cmp, const float speed) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].luckyCloud.SetEvolvingSpeed(speed);
+			//m_clouds[entity].luckyCloud.SetEvolvingSpeed(speed);
 		}
 
 		float getEvolutionSpeed(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			return m_clouds[entity].luckyCloud.GetEvolvingSpeed();
+			//return m_clouds[entity].luckyCloud.GetEvolvingSpeed();
+			return 0.0f;
 		}
 
 
