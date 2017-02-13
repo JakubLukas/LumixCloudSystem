@@ -2,7 +2,7 @@
 
 #include "engine/universe/universe.h"
 #include "engine/iallocator.h"
-#include "engine/hash_map.h"
+#include "engine/associative_array.h"
 #include "engine/property_register.h"
 #include "engine/serializer.h"
 #include "engine/blob.h"
@@ -23,15 +23,6 @@ namespace Lumix
 static const ComponentType CLOUD_TYPE = PropertyRegister::getComponentType("cloud");
 
 
-struct Node
-{
-	u8 value;
-};
-
-
-static const Node EMPTY_NODE = { 0 };
-
-
 struct Cloud
 {
 	Entity entity;
@@ -39,13 +30,7 @@ struct Cloud
 	int cell_count_x;
 	int cell_count_y;
 	int cell_count_z;
-	Array<Node> nodes;
-	//VolumetricCloud luckyCloud;
-	Simulation simulation;
-
-	Cloud(IAllocator& allocator)
-		: nodes(allocator)
-	{}
+	CldSim::Simulation simulation;
 };
 
 
@@ -64,7 +49,6 @@ struct Cloud
 			, m_universe(universe)
 			, m_allocator(allocator)
 			, m_clouds(allocator)
-			, m_timePassed(0.0f)
 		{
 			//m_universe.entityTransformed().bind<NavigationSceneImpl, &NavigationSceneImpl::onEntityMoved>(this);
 			universe.registerComponentType(CLOUD_TYPE, this, &CloudSceneImpl::serializeCloud, &CloudSceneImpl::deserializeCloud);
@@ -80,26 +64,9 @@ struct Cloud
 		{
 			if(type == CLOUD_TYPE)
 			{
-				m_clouds.insert(entity, Cloud(m_allocator));
+				Cloud& cloud = m_clouds.insert(entity);
 
-				Cloud& cloud = m_clouds[entity];
 				cloud.entity = entity;
-				//cloud.size = Vec3(1000, 50, 1000);
-				//cloud.cell_count_x = 1000;
-				//cloud.cell_count_y = 50;
-				//cloud.cell_count_z = 1000;
-				//setupCloudNodeCount(cloud);
-
-				/*Environment enviroment{ Lumix::Vec3(0, 0, -40) };
-				CloudProperties cloudProps{
-					800,
-					300,
-					80,
-					12,
-					0.8f,
-					Lumix::Vec3(0, 0, 0)
-				};
-				cloud.luckyCloud.Setup(enviroment, cloudProps);*/
 				cloud.simulation.Setup(30, 10, 30);
 
 				ComponentHandle cmp = { entity.index };
@@ -114,9 +81,7 @@ struct Cloud
 			if(type == CLOUD_TYPE)
 			{
 				Entity entity = { component.index };
-				auto iter = m_clouds.find(entity);
-				Cloud& cloud = iter.value();
-				m_clouds.erase(iter);
+				m_clouds.erase(entity);
 				m_universe.destroyComponent(entity, type, this, component);
 			}
 			else
@@ -129,8 +94,8 @@ struct Cloud
 		{
 			if(type == CLOUD_TYPE)
 			{
-				auto iter = m_clouds.find(entity);
-				const Cloud& cloud = iter.value();
+				if (m_clouds.find(entity) < 0)
+					return INVALID_COMPONENT;
 				return{ entity.index };
 			}
 			return INVALID_COMPONENT;
@@ -160,50 +125,24 @@ struct Cloud
 			while(isValid(camera));
 			Vec3 dir = m_universe.getRotation(camera).rotate(Vec3(0, 0, 1));
 
-			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
+			for (const Cloud& cloud : m_clouds)
 			{
-				Cloud& cloud = iter.value();
-				/*Vec3 pos = m_universe.getPosition(cloud.entity);
-				Vec3 cell_size(
-					cloud.size.x / cloud.cell_count_x,
-					cloud.size.y / cloud.cell_count_y,
-					cloud.size.z / cloud.cell_count_z
-				);
-				float sphere_radius = Math::minimum(Math::minimum(cell_size.x, cell_size.y), cell_size.z) * 0.2f;
-				for(int z = 0, cz = cloud.cell_count_z; z < cz; ++z)
-					for(int y = 0, cy = cloud.cell_count_y; y < cy; ++y)
-						for(int x = 0, cx = cloud.cell_count_x; x < cx; ++x)
-						{
-							Vec3 nodePos = pos + Vec3(x*cell_size.x, y*cell_size.y, z*cell_size.z);
-							render_scene->addDebugCircle(nodePos, dir, sphere_radius, 0x0f00aaff, 0);
-						}*/
-
-
-				/*CParticleEnumerator Enumerator(&cloud.luckyCloud.m_ParticlePool);
-				CloudParticle *pCurParticle = Enumerator.NextParticle();
-				while (pCurParticle)
-				{
-					u32 color = 0xff000000
-						+ (u32(pCurParticle->m_cScatteringColor.x * 0xff) << 16)
-						+ (u32(pCurParticle->m_cScatteringColor.y * 0xff) << 8)
-						+ (u32(pCurParticle->m_cScatteringColor.z * 0xff));
-					//render_scene->addDebugCircle(*pCurParticle->GetPosition(), dir, 12.0f, color, 0);
-					render_scene->addDebugPoint(*pCurParticle->GetPosition(), color, 0);
-					pCurParticle = Enumerator.NextParticle();
-				}*/
-
-				const float* densitySpace = cloud.simulation.GetDensitySpace();
+				const bool* humSpace = cloud.simulation.GetHumiditySpace();
+				const bool* actSpace = cloud.simulation.GetActiveSpace();
+				const bool* cldSpace = cloud.simulation.GetCloudSpace();
 				for(int x = 0; x < cloud.simulation.GetWidth(); ++x)
 				{
 					for(int y = 0; y < cloud.simulation.GetHeight(); ++y)
 					{
 						for(int z = 0; z < cloud.simulation.GetLength(); ++z)
 						{
-							float dens = densitySpace[cloud.simulation.GetIndex(x, y, z)];
+							bool hum = humSpace[cloud.simulation.GetIndex(x, y, z)];
+							bool act = actSpace[cloud.simulation.GetIndex(x, y, z)];
+							bool cld = cldSpace[cloud.simulation.GetIndex(x, y, z)];
 							u32 color = 0xff000000
-								+ (u32(dens * 0xff) << 16)
-								+ (u32(dens * 0xff) << 8)
-								+ (u32(dens * 0xff));
+								+ (u32(cld * 0xff) << 16)
+								+ (u32(cld * 0xff) << 8)
+								+ (u32(cld * 0xff));
 							render_scene->addDebugPoint(Vec3((float)x, (float)y, (float)z), color, 0);
 						}
 					}
@@ -216,19 +155,10 @@ struct Cloud
 			if(paused)
 				return;
 
-			//m_timePassed += time_delta;
-			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
-				//iter.value().luckyCloud.Update(m_timePassed);
-				iter.value().simulation.Update(time_delta);
+			for (Cloud& cloud : m_clouds)
+				cloud.simulation.Update(time_delta);
+
 			debugDraw();
-		}
-
-
-		void setupCloudNodeCount(Cloud& cloud)
-		{
-			cloud.nodes.resize(((int)cloud.cell_count_x + 1) * ((int)cloud.cell_count_y + 1) * ((int)cloud.cell_count_z + 1));
-			for(int i = 0, c = cloud.nodes.size(); i < c; ++i)
-				cloud.nodes[i] = EMPTY_NODE;
 		}
 
 
@@ -236,13 +166,13 @@ struct Cloud
 		{
 			int count = m_clouds.size();
 			serializer.write(count);
-			for(auto iter = m_clouds.begin(), end = m_clouds.end(); iter != end; ++iter)
+			for(const Cloud& cloud : m_clouds)
 			{
-				serializer.write(iter.key());
-				serializer.write(iter.value().size);
-				serializer.write(iter.value().cell_count_x);
-				serializer.write(iter.value().cell_count_y);
-				serializer.write(iter.value().cell_count_z);
+				serializer.write(cloud.entity);
+				serializer.write(cloud.size);
+				serializer.write(cloud.cell_count_x);
+				serializer.write(cloud.cell_count_y);
+				serializer.write(cloud.cell_count_z);
 			}
 		};
 
@@ -250,16 +180,15 @@ struct Cloud
 		{
 			int count = 0;
 			serializer.read(count);
-			m_clouds.rehash(count);
+			m_clouds.reserve(count);
 			for(int i = 0; i < count; ++i)
 			{
-				Cloud cloud(m_allocator);
+				Cloud cloud;
 				serializer.read(cloud.entity);
 				serializer.read(cloud.size);
 				serializer.read(cloud.cell_count_x);
 				serializer.read(cloud.cell_count_y);
 				serializer.read(cloud.cell_count_z);
-				setupCloudNodeCount(cloud);
 
 				m_clouds.insert(cloud.entity, cloud);
 				ComponentHandle cmp = { cloud.entity.index };
@@ -278,15 +207,14 @@ struct Cloud
 		}
 
 
-		void deserializeCloud(IDeserializer& serializer, Entity entity)
+		void deserializeCloud(IDeserializer& serializer, Entity entity, int)
 		{
-			Cloud cloud(m_allocator);
+			Cloud cloud;
 			cloud.entity = entity;
 			serializer.read(&cloud.size);
 			serializer.read(&cloud.cell_count_x);
 			serializer.read(&cloud.cell_count_y);
 			serializer.read(&cloud.cell_count_z);
-			setupCloudNodeCount(cloud);
 
 			m_clouds.insert(cloud.entity, cloud);
 			ComponentHandle cmp = { cloud.entity.index };
@@ -351,8 +279,7 @@ struct Cloud
 		IAllocator& m_allocator;
 		Universe& m_universe;
 		CloudSystem& m_system;
-		HashMap<Entity, Cloud> m_clouds;
-		float m_timePassed;
+		AssociativeArray<Entity, Cloud> m_clouds;
 	};
 
 

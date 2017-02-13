@@ -3,6 +3,10 @@
 #include "utils.h"
 
 
+namespace CldSim
+{
+
+
 class Simulation
 {
 private:
@@ -14,7 +18,16 @@ private:
 	uint m_actualIndex;
 
 private:
-	float* m_densitySpace[2];
+	bool* m_hum[2];//TODO: optimize to bit field
+	bool* m_act[2];
+	bool* m_cld[2];
+	bool* m_ext[2];
+	float* m_extTimes;
+
+	float m_pHum = 0.2f;
+	float m_pAct = 0.2f;
+	float m_tExt = 1.0f;
+
 
 public:
 	Simulation();
@@ -24,21 +37,25 @@ public:
 	int GetHeight() const { return m_height; }
 	int GetLength() const { return m_length; }
 
-	int GetIndex(int x, int y, int z) const;
+	inline int GetIndex(int x, int y, int z) const;
 
 	bool Setup(uint width, uint height, uint length);
 	void Clear();
 
 	void Update(float deltaTime);
 
-	const float* GetDensitySpace() const { return m_densitySpace[1 - m_actualIndex]; }
+	const bool* GetCloudSpace() const { return m_cld[1 - m_actualIndex]; }
+	const bool* GetActiveSpace() const { return m_act[1 - m_actualIndex]; }
+	const bool* GetHumiditySpace() const { return m_hum[1 - m_actualIndex]; }
 
 private:
 	bool IsPointInSpace(const Vec3& point) const;
 	bool IsCellInSpace(int x, int y, int z) const;
 
-	void Simulate(int x, int y, int z);
+	inline void Simulate(int x, int y, int z);
 
-	template<typename Type>
-	int GetNeighborCount(Type* space, int x, int y, int z, Type valueGreaterThan) const;
+	bool CalcNeighborFunc(bool* space, int x, int y, int z) const;
 };
+
+
+}
