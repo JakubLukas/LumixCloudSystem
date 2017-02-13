@@ -21,15 +21,34 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			&CloudScene::setCloudSize));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec3, CloudScene>)("Cell Count",
-			&CloudScene::getCloudCellCount,
-			&CloudScene::setCloudCellCount));
+			&CloudScene::getCloudCellSpace,
+			&CloudScene::setCloudCellSpace));
 	PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Evolution Speed",
-			&CloudScene::getEvolutionSpeed,
-			&CloudScene::setEvolutionSpeed,
-			0.0f,
-			1.0f,
-			0.1f));
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Humidity probability",
+			&CloudScene::getCloudHumidityProbability,
+			&CloudScene::setCloudHumidityProbability,
+			0.0f, 1.0f, 0.05f));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Active probability",
+			&CloudScene::getCloudActiveProbability,
+			&CloudScene::setCloudActiveProbability,
+			0.0f, 1.0f, 0.05f));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extension probability",
+			&CloudScene::getCloudExtensionProbability,
+			&CloudScene::setCloudExtensionProbability,
+			0.0f, 1.0f, 0.05f));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extinction Time",
+			&CloudScene::getCloudExtinctionTime,
+			&CloudScene::setCloudExtinctionTime,
+			0.0f, 10.0f, 0.1f));
+	/*PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extinction Time",
+			&CloudScene::getCloudExtinctionTime,
+			&CloudScene::setCloudExtinctionTime,
+			0.0f, 10.0f, 0.1f));
+	PropertyRegister::*/
 }
 
 

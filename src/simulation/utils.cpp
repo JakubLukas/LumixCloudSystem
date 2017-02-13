@@ -30,6 +30,7 @@ void createArray(int size, Type** arrayLoc)
 	memset(*arrayLoc, 0, size * sizeof(Type));
 }
 template void createArray<bool>(int size, bool** arrayLoc);
+template void createArray<float>(int size, float** arrayLoc);
 
 
 }

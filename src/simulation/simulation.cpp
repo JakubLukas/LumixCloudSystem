@@ -56,16 +56,24 @@ bool Simulation::Setup(uint width, uint height, uint length)
 
 	createArray<float>(size, &m_extTimes);
 
-	for (int i = 0; i < size; ++i)
-	{
-		m_hum[1 - m_actualIndex][i] = randFloat() < m_pHum;
-		m_act[1 - m_actualIndex][i] = m_hum[1 - m_actualIndex][i] && (randFloat() < m_pAct);
-		m_ext[1 - m_actualIndex][i] = 0;
-		m_cld[1 - m_actualIndex][i] = 0;
-		m_extTimes[i] = -1.0f;
-	}
+	InitValues();
 
 	return true;
+}
+
+
+void Simulation::InitValues()
+{
+	int size = m_width * m_height * m_length;
+
+	for(int i = 0; i < size; ++i)
+	{
+		m_hum[1 - m_actualIndex][i] = randFloat() < m_pHumInit;
+		m_act[1 - m_actualIndex][i] = m_hum[1 - m_actualIndex][i] && (randFloat() < m_pActInit);
+		m_ext[1 - m_actualIndex][i] = 0;
+		m_cld[1 - m_actualIndex][i] = 0;
+		m_extTimes[i] = 0.0f;
+	}
 }
 
 
@@ -87,15 +95,21 @@ void Simulation::Clear()
 }
 
 
-void Simulation::Update(float delta_time)
+void Simulation::Restart()
 {
-	static float timePassed = 0.0f;
+	InitValues();
+}
+
+
+void Simulation::Update(float deltaTime)
+{
+	/*static float timePassed = 0.0f;
 	static const float STEP = 1.0f;
-	timePassed += delta_time;
+	timePassed += deltaTime;
 	if (timePassed < STEP)
 		return;
 
-	timePassed -= STEP;
+	timePassed -= STEP;*/
 
 	for (int x = 0; x < m_width; ++x)
 	{
@@ -103,7 +117,7 @@ void Simulation::Update(float delta_time)
 		{
 			for (int z = 0; z < m_length; ++z)
 			{
-				Simulate(x, y, z);
+				Simulate(x, y, z, deltaTime);
 			}
 		}
 	}
@@ -112,38 +126,40 @@ void Simulation::Update(float delta_time)
 }
 
 
-void Simulation::Simulate(int x, int y, int z)
+void Simulation::Simulate(int x, int y, int z, float deltaTime)
 {
 	int index = GetIndex(x, y, z);
 
 	m_act[m_actualIndex][index] =
 		(!m_act[1 - m_actualIndex][index]
-			&& m_hum[1 - m_actualIndex][index]
-			&& CalcNeighborFunc(m_act[1 - m_actualIndex], x, y, z))
-		|| (randFloat() < 0.01f);
+		&& m_hum[1 - m_actualIndex][index]
+		&& CalcNeighborFunc(m_act[1 - m_actualIndex], x, y, z))
+		|| (randFloat() < m_pActUpdate);
 
 	m_hum[m_actualIndex][index] =
 		(m_hum[1 - m_actualIndex][index]
-			&& !m_act[1 - m_actualIndex][index])
-		|| (randFloat() < 0.01f);
+		&& !m_act[1 - m_actualIndex][index])
+		|| (randFloat() < m_pHumUpdate);
 
 	m_ext[m_actualIndex][index] =
 		(!m_ext[1 - m_actualIndex][index]
-			&& m_cld[1 - m_actualIndex][index]
-			&& CalcNeighborFunc(m_ext[1 - m_actualIndex], x, y, z))
-		|| (randFloat() < 0.01f);
+		&& m_cld[1 - m_actualIndex][index]
+		&& CalcNeighborFunc(m_ext[1 - m_actualIndex], x, y, z))
+		|| (randFloat() < m_pExtUpdate);
 
 	bool newCld = !m_ext[1 - m_actualIndex][index]
 		&& (m_cld[1 - m_actualIndex][index] || m_act[1 - m_actualIndex][index]);
 
 	if (!newCld && m_cld[m_actualIndex][index])
 	{
-		if (m_extTimes[index] < 0.0f)
+		m_extTimes[index] += deltaTime;
+		if(m_extTimes[index] > m_tExt)
+			m_extTimes[index] = 0.0f;
+		else
+			newCld = !newCld;
 	}
 
-	m_cld[m_actualIndex][index] =
-		!m_ext[1 - m_actualIndex][index]
-		&& (m_cld[1 - m_actualIndex][index] || m_act[1 - m_actualIndex][index]);
+	m_cld[m_actualIndex][index] = newCld;
 }
 
 
@@ -151,14 +167,6 @@ void Simulation::Simulate(int x, int y, int z)
 int Simulation::GetIndex(int x, int y, int z) const
 {
 	return (x * m_width * m_height + y * m_height + z);
-}
-
-
-bool Simulation::IsPointInSpace(const Vec3& point) const
-{
-	return (point.x >= 0) && (point.x < m_width)
-		&& (point.y >= 0) && (point.y < m_height)
-		&& (point.z >= 0) && (point.z < m_length);
 }
 
 
@@ -172,8 +180,8 @@ bool Simulation::IsCellInSpace(int i, int j, int k) const
 
 bool Simulation::CalcNeighborFunc(bool* space, int x, int y, int z) const
 {
-	int index = 0;
-	bool result = 0;
+	int index;
+	bool result = false;
 
 	if (IsCellInSpace(x + 1, y, z))
 	{

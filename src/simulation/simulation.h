@@ -24,9 +24,14 @@ private:
 	bool* m_ext[2];
 	float* m_extTimes;
 
-	float m_pHum = 0.2f;
-	float m_pAct = 0.2f;
-	float m_tExt = 1.0f;
+	float m_pHumInit = 0.2f;
+	float m_pActInit = 0.2f;
+
+	float m_tExt = 2.0f;
+
+	float m_pHumUpdate = 0.01f;
+	float m_pActUpdate = 0.1f;
+	float m_pExtUpdate = 0.995f;
 
 
 public:
@@ -40,7 +45,9 @@ public:
 	inline int GetIndex(int x, int y, int z) const;
 
 	bool Setup(uint width, uint height, uint length);
+	inline void InitValues();
 	void Clear();
+	void Restart();
 
 	void Update(float deltaTime);
 
@@ -48,11 +55,22 @@ public:
 	const bool* GetActiveSpace() const { return m_act[1 - m_actualIndex]; }
 	const bool* GetHumiditySpace() const { return m_hum[1 - m_actualIndex]; }
 
+	float GetHumidityProbability() const { return m_pHumUpdate; }
+	void SetHumidityProbability(float value) { m_pHumUpdate = value; }
+
+	float GetActiveProbability() const { return m_pActUpdate; }
+	void SetActiveProbability(float value) { m_pActUpdate = value; }
+
+	float GetExtensionProbability() const { return m_pExtUpdate; }
+	void SetExtensionProbability(float value) { m_pExtUpdate = value; }
+
+	float GetExtinctionTime() const { return m_tExt; }
+	void SetExtinctionTime(float value) { m_tExt = value; }
+
 private:
-	bool IsPointInSpace(const Vec3& point) const;
 	bool IsCellInSpace(int x, int y, int z) const;
 
-	inline void Simulate(int x, int y, int z);
+	inline void Simulate(int x, int y, int z, float deltaTime);
 
 	bool CalcNeighborFunc(bool* space, int x, int y, int z) const;
 };

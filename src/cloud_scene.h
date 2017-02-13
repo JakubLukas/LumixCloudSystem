@@ -21,10 +21,17 @@ namespace Lumix
 
 		virtual void setCloudSize(ComponentHandle cmp, const Vec3& size) = 0;
 		virtual Vec3 getCloudSize(ComponentHandle cmp) = 0;
-		virtual void setCloudCellCount(ComponentHandle cmp, const Vec3& count) = 0;
-		virtual Vec3 getCloudCellCount(ComponentHandle cmp) = 0;
-		virtual void setEvolutionSpeed(ComponentHandle cmp, const float speed) = 0;
-		virtual float getEvolutionSpeed(ComponentHandle cmp) = 0;
+		virtual void setCloudCellSpace(ComponentHandle cmp, const Vec3& count) = 0;
+		virtual Vec3 getCloudCellSpace(ComponentHandle cmp) = 0;
+		virtual void setCloudHumidityProbability(ComponentHandle cmp, const float value) = 0;
+		virtual float getCloudHumidityProbability(ComponentHandle cmp) = 0;
+		virtual void setCloudActiveProbability(ComponentHandle cmp, const float value) = 0;
+		virtual float getCloudActiveProbability(ComponentHandle cmp) = 0;
+		virtual void setCloudExtensionProbability(ComponentHandle cmp, const float value) = 0;
+		virtual float getCloudExtensionProbability(ComponentHandle cmp) = 0;
+		virtual void setCloudExtinctionTime(ComponentHandle cmp, const float value) = 0;
+		virtual float getCloudExtinctionTime(ComponentHandle cmp) = 0;
+		virtual void restartSimulation(ComponentHandle cmp) = 0;
 
 	};
 

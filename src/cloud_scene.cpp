@@ -11,9 +11,6 @@
 #include "engine/crc32.h"
 
 
-//////////////////////////
-//#include "lucky_cloud/volumetric_cloud.h"
-//#include "lucky_cloud/CloudParticle.h"
 #include "simulation/simulation.h"
 
 
@@ -26,10 +23,7 @@ static const ComponentType CLOUD_TYPE = PropertyRegister::getComponentType("clou
 struct Cloud
 {
 	Entity entity;
-	Vec3 size;
-	int cell_count_x;
-	int cell_count_y;
-	int cell_count_z;
+	Vec3 cellSpace;
 	CldSim::Simulation simulation;
 };
 
@@ -67,6 +61,7 @@ struct Cloud
 				Cloud& cloud = m_clouds.insert(entity);
 
 				cloud.entity = entity;
+				cloud.cellSpace = Vec3(10, 10, 10);
 				cloud.simulation.Setup(30, 10, 30);
 
 				ComponentHandle cmp = { entity.index };
@@ -125,6 +120,8 @@ struct Cloud
 			while(isValid(camera));
 			Vec3 dir = m_universe.getRotation(camera).rotate(Vec3(0, 0, 1));
 
+			Vec3 nodePos;
+
 			for (const Cloud& cloud : m_clouds)
 			{
 				const bool* humSpace = cloud.simulation.GetHumiditySpace();
@@ -132,10 +129,14 @@ struct Cloud
 				const bool* cldSpace = cloud.simulation.GetCloudSpace();
 				for(int x = 0; x < cloud.simulation.GetWidth(); ++x)
 				{
+					nodePos.x = x * cloud.cellSpace.x;
 					for(int y = 0; y < cloud.simulation.GetHeight(); ++y)
 					{
+						nodePos.y = y * cloud.cellSpace.y;
 						for(int z = 0; z < cloud.simulation.GetLength(); ++z)
 						{
+							nodePos.z = z * cloud.cellSpace.z;
+
 							bool hum = humSpace[cloud.simulation.GetIndex(x, y, z)];
 							bool act = actSpace[cloud.simulation.GetIndex(x, y, z)];
 							bool cld = cldSpace[cloud.simulation.GetIndex(x, y, z)];
@@ -143,7 +144,7 @@ struct Cloud
 								+ (u32(cld * 0xff) << 16)
 								+ (u32(cld * 0xff) << 8)
 								+ (u32(cld * 0xff));
-							render_scene->addDebugPoint(Vec3((float)x, (float)y, (float)z), color, 0);
+							render_scene->addDebugPoint(nodePos, color, 0);
 						}
 					}
 				}
@@ -169,10 +170,8 @@ struct Cloud
 			for(const Cloud& cloud : m_clouds)
 			{
 				serializer.write(cloud.entity);
-				serializer.write(cloud.size);
-				serializer.write(cloud.cell_count_x);
-				serializer.write(cloud.cell_count_y);
-				serializer.write(cloud.cell_count_z);
+				//serializer.write(cloud.size);
+				serializer.write(cloud.cellSpace);
 			}
 		};
 
@@ -185,10 +184,8 @@ struct Cloud
 			{
 				Cloud cloud;
 				serializer.read(cloud.entity);
-				serializer.read(cloud.size);
-				serializer.read(cloud.cell_count_x);
-				serializer.read(cloud.cell_count_y);
-				serializer.read(cloud.cell_count_z);
+				//serializer.read(cloud.size);
+				serializer.read(cloud.cellSpace);
 
 				m_clouds.insert(cloud.entity, cloud);
 				ComponentHandle cmp = { cloud.entity.index };
@@ -200,10 +197,10 @@ struct Cloud
 		void serializeCloud(ISerializer& serializer, ComponentHandle cmp)
 		{
 			Cloud& cloud = m_clouds[{cmp.index}];
-			serializer.write("size", cloud.size);
-			serializer.write("cell_count_x", cloud.cell_count_x);
-			serializer.write("cell_count_y", cloud.cell_count_y);
-			serializer.write("cell_count_z", cloud.cell_count_z);
+			//serializer.write("size", cloud.size);
+			serializer.write("cell_count_x", cloud.cellSpace.x);
+			serializer.write("cell_count_y", cloud.cellSpace.y);
+			serializer.write("cell_count_z", cloud.cellSpace.z);
 		}
 
 
@@ -211,10 +208,10 @@ struct Cloud
 		{
 			Cloud cloud;
 			cloud.entity = entity;
-			serializer.read(&cloud.size);
-			serializer.read(&cloud.cell_count_x);
-			serializer.read(&cloud.cell_count_y);
-			serializer.read(&cloud.cell_count_z);
+			//serializer.read(&cloud.size);
+			serializer.read(&cloud.cellSpace.x);
+			serializer.read(&cloud.cellSpace.y);
+			serializer.read(&cloud.cellSpace.z);
 
 			m_clouds.insert(cloud.entity, cloud);
 			ComponentHandle cmp = { cloud.entity.index };
@@ -234,7 +231,6 @@ struct Cloud
 		Vec3 getCloudSize(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			//return m_clouds[entity].size;
 			return Vec3(
 				(float)m_clouds[entity].simulation.GetWidth(),
 				(float)m_clouds[entity].simulation.GetHeight(),
@@ -242,38 +238,82 @@ struct Cloud
 		}
 
 
-		void setCloudCellCount(ComponentHandle cmp, const Vec3& count) override
+		void setCloudCellSpace(ComponentHandle cmp, const Vec3& count) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].cell_count_x = (int)count.x;
-			m_clouds[entity].cell_count_y = (int)count.y;
-			m_clouds[entity].cell_count_z = (int)count.z;
+			m_clouds[entity].cellSpace.x = count.x;
+			m_clouds[entity].cellSpace.y = count.y;
+			m_clouds[entity].cellSpace.z = count.z;
 		}
 		
-		Vec3 getCloudCellCount(ComponentHandle cmp) override
+		Vec3 getCloudCellSpace(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
 			Vec3 count(
-				(float)m_clouds[entity].cell_count_x,
-				(float)m_clouds[entity].cell_count_y,
-				(float)m_clouds[entity].cell_count_z);
+				m_clouds[entity].cellSpace.x,
+				m_clouds[entity].cellSpace.y,
+				m_clouds[entity].cellSpace.z);
 			return count;
 		}
 
 
-		void setEvolutionSpeed(ComponentHandle cmp, const float speed) override
+		void setCloudHumidityProbability(ComponentHandle cmp, const float value) override
 		{
 			Entity entity = { cmp.index };
-			//m_clouds[entity].luckyCloud.SetEvolvingSpeed(speed);
+			m_clouds[entity].simulation.SetHumidityProbability(value);
 		}
 
-		float getEvolutionSpeed(ComponentHandle cmp) override
+		float getCloudHumidityProbability(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			//return m_clouds[entity].luckyCloud.GetEvolvingSpeed();
-			return 0.0f;
+			return m_clouds[entity].simulation.GetHumidityProbability();
 		}
 
+
+		void setCloudActiveProbability(ComponentHandle cmp, const float value) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].simulation.SetActiveProbability(value);
+		}
+
+		float getCloudActiveProbability(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].simulation.GetActiveProbability();
+		}
+
+
+		void setCloudExtensionProbability(ComponentHandle cmp, const float value) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].simulation.SetExtensionProbability(value);
+		}
+
+		float getCloudExtensionProbability(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].simulation.GetExtensionProbability();
+		}
+
+
+		void setCloudExtinctionTime(ComponentHandle cmp, const float value) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].simulation.SetExtinctionTime(value);
+		}
+
+		float getCloudExtinctionTime(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].simulation.GetExtinctionTime();
+		}
+
+
+		void restartSimulation(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].simulation.Restart();
+		}
 
 
 		IAllocator& m_allocator;
