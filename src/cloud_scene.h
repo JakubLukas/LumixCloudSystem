@@ -27,8 +27,8 @@ namespace Lumix
 		virtual float getCloudHumidityProbability(ComponentHandle cmp) = 0;
 		virtual void setCloudActiveProbability(ComponentHandle cmp, const float value) = 0;
 		virtual float getCloudActiveProbability(ComponentHandle cmp) = 0;
-		virtual void setCloudExtensionProbability(ComponentHandle cmp, const float value) = 0;
-		virtual float getCloudExtensionProbability(ComponentHandle cmp) = 0;
+		virtual void setCloudExtinctionProbability(ComponentHandle cmp, const float value) = 0;
+		virtual float getCloudExtinctionProbability(ComponentHandle cmp) = 0;
 		virtual void setCloudExtinctionTime(ComponentHandle cmp, const float value) = 0;
 		virtual float getCloudExtinctionTime(ComponentHandle cmp) = 0;
 		virtual void restartSimulation(ComponentHandle cmp) = 0;

@@ -9,7 +9,6 @@ Simulation::Simulation()
 	: m_width(0)
 	, m_height(0)
 	, m_length(0)
-	, m_elapsedSteps(0)
 	, m_actualIndex(0)
 {
 	m_hum[0] = nullptr;
@@ -40,21 +39,20 @@ bool Simulation::Setup(uint width, uint height, uint length)
 
 	int size = width * height * length;
 	m_actualIndex = 0;
-	m_elapsedSteps = 0;
 
-	createArray<bool>(size, &m_hum[0]);
-	createArray<bool>(size, &m_hum[1]);
+	createArray(size, &m_hum[0]);
+	createArray(size, &m_hum[1]);
 
-	createArray<bool>(size, &m_act[0]);
-	createArray<bool>(size, &m_act[1]);
+	createArray(size, &m_act[0]);
+	createArray(size, &m_act[1]);
 
-	createArray<bool>(size, &m_cld[0]);
-	createArray<bool>(size, &m_cld[1]);
+	createArray(size, &m_cld[0]);
+	createArray(size, &m_cld[1]);
 
-	createArray<bool>(size, &m_ext[0]);
-	createArray<bool>(size, &m_ext[1]);
+	createArray(size, &m_ext[0]);
+	createArray(size, &m_ext[1]);
 
-	createArray<float>(size, &m_extTimes);
+	createArray(size, &m_extTimes);
 
 	InitValues();
 
@@ -111,11 +109,11 @@ void Simulation::Update(float deltaTime)
 
 	timePassed -= STEP;*/
 
-	for (int x = 0; x < m_width; ++x)
+	for (uint x = 0; x < m_width; ++x)
 	{
-		for (int y = 0; y < m_height; ++y)
+		for (uint y = 0; y < m_height; ++y)
 		{
-			for (int z = 0; z < m_length; ++z)
+			for (uint z = 0; z < m_length; ++z)
 			{
 				Simulate(x, y, z, deltaTime);
 			}
@@ -126,7 +124,7 @@ void Simulation::Update(float deltaTime)
 }
 
 
-void Simulation::Simulate(int x, int y, int z, float deltaTime)
+void Simulation::Simulate(uint x, uint y, uint z, float deltaTime)
 {
 	int index = GetIndex(x, y, z);
 
@@ -164,13 +162,13 @@ void Simulation::Simulate(int x, int y, int z, float deltaTime)
 
 
 
-int Simulation::GetIndex(int x, int y, int z) const
+uint Simulation::GetIndex(uint x, uint y, uint z) const
 {
 	return (x * m_width * m_height + y * m_height + z);
 }
 
 
-bool Simulation::IsCellInSpace(int i, int j, int k) const
+bool Simulation::IsCellInSpace(uint i, uint j, uint k) const
 {
 	return (i >= 0) && (i < m_width)
 		&& (j >= 0) && (j < m_height)
@@ -178,7 +176,7 @@ bool Simulation::IsCellInSpace(int i, int j, int k) const
 }
 
 
-bool Simulation::CalcNeighborFunc(bool* space, int x, int y, int z) const
+bool Simulation::CalcNeighborFunc(bool* space, uint x, uint y, uint z) const
 {
 	int index;
 	bool result = false;

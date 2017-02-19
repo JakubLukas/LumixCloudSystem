@@ -35,8 +35,8 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			0.0f, 1.0f, 0.05f));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extension probability",
-			&CloudScene::getCloudExtensionProbability,
-			&CloudScene::setCloudExtensionProbability,
+			&CloudScene::getCloudExtinctionProbability,
+			&CloudScene::setCloudExtinctionProbability,
 			0.0f, 1.0f, 0.05f));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extinction Time",

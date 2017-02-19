@@ -13,7 +13,7 @@ float randFloat();
 
 
 template<typename Type>
-void createArray(int size, Type** arrayLoc);
+void createArray(uint size, Type** arrayLoc);
 
 
 }

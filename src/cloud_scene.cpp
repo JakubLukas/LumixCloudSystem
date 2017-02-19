@@ -12,6 +12,7 @@
 
 
 #include "simulation/simulation.h"
+#include "render/renderer.h"
 
 
 namespace Lumix
@@ -25,6 +26,7 @@ struct Cloud
 	Entity entity;
 	Vec3 cellSpace;
 	CldSim::Simulation simulation;
+	CldSim::CloudRenderer renderer;
 };
 
 
@@ -63,6 +65,7 @@ struct Cloud
 				cloud.entity = entity;
 				cloud.cellSpace = Vec3(10, 10, 10);
 				cloud.simulation.Setup(30, 10, 30);
+				cloud.renderer.Setup(30, 10, 30);
 
 				ComponentHandle cmp = { entity.index };
 				m_universe.addComponent(entity, type, this, cmp);
@@ -127,13 +130,13 @@ struct Cloud
 				const bool* humSpace = cloud.simulation.GetHumiditySpace();
 				const bool* actSpace = cloud.simulation.GetActiveSpace();
 				const bool* cldSpace = cloud.simulation.GetCloudSpace();
-				for(int x = 0; x < cloud.simulation.GetWidth(); ++x)
+				for(CldSim::uint x = 0; x < cloud.simulation.GetWidth(); ++x)
 				{
 					nodePos.x = x * cloud.cellSpace.x;
-					for(int y = 0; y < cloud.simulation.GetHeight(); ++y)
+					for(CldSim::uint y = 0; y < cloud.simulation.GetHeight(); ++y)
 					{
 						nodePos.y = y * cloud.cellSpace.y;
-						for(int z = 0; z < cloud.simulation.GetLength(); ++z)
+						for(CldSim::uint z = 0; z < cloud.simulation.GetLength(); ++z)
 						{
 							nodePos.z = z * cloud.cellSpace.z;
 
@@ -148,6 +151,18 @@ struct Cloud
 						}
 					}
 				}
+				/*CldSim::uint size =
+					cloud.simulation.GetWidth()
+					* cloud.simulation.GetHeight()
+					* cloud.simulation.GetLength();
+				for(CldSim::uint i = 0; i < size; ++i)
+				{
+					const auto& p = cloud.renderer.GetParticles()[i];
+					u32 color = 0xff000000
+						+ (u32(p.color.x * 0xff) << 16)
+						+ (u32(p.color.y * 0xff) << 8)
+						+ (u32(p.color.z * 0xff));
+				}*/
 			}
 		}
 
@@ -156,8 +171,11 @@ struct Cloud
 			if(paused)
 				return;
 
-			for (Cloud& cloud : m_clouds)
+			for(Cloud& cloud : m_clouds)
+			{
 				cloud.simulation.Update(time_delta);
+				//cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
+			}
 
 			debugDraw();
 		}
@@ -283,16 +301,16 @@ struct Cloud
 		}
 
 
-		void setCloudExtensionProbability(ComponentHandle cmp, const float value) override
+		void setCloudExtinctionProbability(ComponentHandle cmp, const float value) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].simulation.SetExtensionProbability(value);
+			m_clouds[entity].simulation.SetExtinctionProbability(value);
 		}
 
-		float getCloudExtensionProbability(ComponentHandle cmp) override
+		float getCloudExtinctionProbability(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			return m_clouds[entity].simulation.GetExtensionProbability();
+			return m_clouds[entity].simulation.GetExtinctionProbability();
 		}
 
 

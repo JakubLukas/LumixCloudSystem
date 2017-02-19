@@ -24,13 +24,13 @@ float randFloat()
 
 
 template<typename Type>
-void createArray(int size, Type** arrayLoc)
+void createArray(uint size, Type** arrayLoc)
 {
 	*arrayLoc = new Type[size];//TODO: remove news, use allocator instead
 	memset(*arrayLoc, 0, size * sizeof(Type));
 }
-template void createArray<bool>(int size, bool** arrayLoc);
-template void createArray<float>(int size, float** arrayLoc);
+template void createArray<bool>(uint size, bool** arrayLoc);
+template void createArray<float>(uint size, float** arrayLoc);
 
 
 }
