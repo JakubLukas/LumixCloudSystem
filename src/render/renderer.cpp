@@ -7,6 +7,15 @@ namespace CldSim
 {
 
 
+void Vec3::Normalize()
+{
+	float lenInv = 1.0f / sqrtf(x*x + y*y + z*z);
+	x *= lenInv;
+	y *= lenInv;
+	z *= lenInv;
+}
+
+
 Vec3 Vec3::Normalized()
 {
 	float lenInv = 1.0f / sqrtf(x*x + y*y + z*z);
@@ -147,11 +156,11 @@ void CloudRenderer::Setup(uint width, uint height, uint length)
 	m_particles = new Particle[size];
 
 	uint index;
-	for(uint x = 0; x != m_width; ++x)
+	for(uint x = 0; x < m_width; ++x)
 	{
-		for(uint y = 0; y != m_height; ++y)
+		for(uint y = 0; y < m_height; ++y)
 		{
-			for(uint z = 0; z != m_length; ++z)
+			for(uint z = 0; z < m_length; ++z)
 			{
 				index = GetIndex(x, y, z);
 				m_particles[index].position = Vec3{
@@ -225,16 +234,20 @@ inline float CloudRenderer::SingleDensity(uint x, uint y, uint z, const bool* cl
 
 inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 {
+	//uint index = GetIndex(x, y, z);
+	//m_particles[index].color = Vec3{ m_densitySpace[index] };
+	//return;
 
 	// Direction in view splace
 	Vec3 viewDirection { 0.0f, 0.0f, 1.0f };
-	Vec3 cameraPos { 0.0f, 0.0f, 0.0f };
+	Vec3 cameraPos { 0.2f, 0.2f, 1.0f };
+	cameraPos.Normalize();
 	Vec3 simSpaceMin { 0.0f, 0.0f, 0.0f };
 	Vec3 simSpaceMax { (float)m_width, (float)m_height, (float)m_length };
 
 	Ray viewRay = Ray(cameraPos, viewDirection.Normalized());
 
-	Vec3 color { 67.0f / 256.0f, 128.0f / 256.0f, 183.0f / 256.0f };
+	Vec3 color { 256.0f, 256.0f, 256.0f };
 	Vec3 pos = viewRay.origin;
 	float tmin, tmax;
 	intersectRayBox(viewRay, simSpaceMin, simSpaceMax, tmin, tmax);

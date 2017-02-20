@@ -14,6 +14,7 @@ struct Vec3
 	float y;
 	float z;
 
+	inline void Normalize();
 	inline Vec3 Normalized();
 	inline void operator +=(const Vec3& other);
 	inline void operator -=(const Vec3& other);
@@ -37,8 +38,8 @@ public:
 
 
 private:
-	const uint viewSamples = 128;
-	const uint lightSamples = 64;
+	const uint viewSamples = 32;
+	const uint lightSamples = 16;
 	const float densityCutoff = 0.06f;
 	const float densityFactor = 0.35f;
 	const float attenuationFactor = 0.15f;

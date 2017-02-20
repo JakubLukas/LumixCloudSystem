@@ -123,11 +123,11 @@ struct Cloud
 			while(isValid(camera));
 			Vec3 dir = m_universe.getRotation(camera).rotate(Vec3(0, 0, 1));
 
-			Vec3 nodePos;
+			Vec3 pos;
 
 			for (const Cloud& cloud : m_clouds)
 			{
-				const bool* humSpace = cloud.simulation.GetHumiditySpace();
+				/*const bool* humSpace = cloud.simulation.GetHumiditySpace();
 				const bool* actSpace = cloud.simulation.GetActiveSpace();
 				const bool* cldSpace = cloud.simulation.GetCloudSpace();
 				for(CldSim::uint x = 0; x < cloud.simulation.GetWidth(); ++x)
@@ -150,19 +150,23 @@ struct Cloud
 							render_scene->addDebugPoint(nodePos, color, 0);
 						}
 					}
-				}
-				/*CldSim::uint size =
+				}*/
+				CldSim::uint size =
 					cloud.simulation.GetWidth()
 					* cloud.simulation.GetHeight()
 					* cloud.simulation.GetLength();
 				for(CldSim::uint i = 0; i < size; ++i)
 				{
 					const auto& p = cloud.renderer.GetParticles()[i];
+					pos.x = p.position.x;
+					pos.y = p.position.y;
+					pos.z = p.position.z;
 					u32 color = 0xff000000
-						+ (u32(p.color.x * 0xff) << 16)
+						+ (u32(1 * 0xff) << 16)
 						+ (u32(p.color.y * 0xff) << 8)
 						+ (u32(p.color.z * 0xff));
-				}*/
+					render_scene->addDebugPoint(pos, color, 0);
+				}
 			}
 		}
 
@@ -174,7 +178,7 @@ struct Cloud
 			for(Cloud& cloud : m_clouds)
 			{
 				cloud.simulation.Update(time_delta);
-				//cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
+				cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
 			}
 
 			debugDraw();
