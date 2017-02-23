@@ -171,6 +171,9 @@ void CloudRenderer::Setup(uint width, uint height, uint length)
 			}
 		}
 	}
+
+	m_box.min = Vec3{ 0.0f, 0.0f, 0.0f };
+	m_box.max = Vec3{ (float)m_width, (float)m_height, (float)m_length };
 }
 
 
@@ -193,13 +196,13 @@ void CloudRenderer::CalcParticleColors(const bool* cloudSpace)
 
 inline uint CloudRenderer::GetIndex(uint x, uint y, uint z) const
 {
-	return (x * m_width * m_height + y * m_height + z);
+	return (x * m_height * m_length + y * m_length + z);
 }
 
 
 void CloudRenderer::CalcDensity(const bool* cloudSpace)
 {
-	static const int S = 6; // Blur matrix is size SxSxS
+	static const int S = 6; // Blur matrix is size SxSxS //TODO: parametrizable
 	for(uint x = 0; x != m_width; ++x)
 	{
 		for(uint y = 0; y != m_height; ++y)
@@ -226,6 +229,7 @@ inline float CloudRenderer::SingleDensity(uint x, uint y, uint z, const bool* cl
 				// Check if kernel isn't in the grid
 				if(kX < 0 || kY < 0 || kZ < 0 || kX >= m_width || kY >= m_height || kZ >= m_length)
 					continue; // Skip if it is
+
 				sum += (float)cloudSpace[GetIndex(kX, kY, kZ)]; // w_i=1; box filter
 			}
 	return sum / (S * S * S);
@@ -234,37 +238,24 @@ inline float CloudRenderer::SingleDensity(uint x, uint y, uint z, const bool* cl
 
 inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 {
-	//uint index = GetIndex(x, y, z);
-	//m_particles[index].color = Vec3{ m_densitySpace[index] };
-	//return;
+	m_cameraPosition.Normalize();
 
-	// Direction in view splace
-	Vec3 viewDirection { 0.0f, 0.0f, 1.0f };
-	Vec3 cameraPos { 0.2f, 0.2f, 1.0f };
-	cameraPos.Normalize();
-	Vec3 simSpaceMin { 0.0f, 0.0f, 0.0f };
-	Vec3 simSpaceMax { (float)m_width, (float)m_height, (float)m_length };
+	Ray viewRay = Ray(m_cameraPosition, m_viewDirection.Normalized());
 
-	Ray viewRay = Ray(cameraPos, viewDirection.Normalized());
-
-	Vec3 color { 256.0f, 256.0f, 256.0f };
+	Vec3 color { 0.0f, 0.0f, 0.0f };
 	Vec3 pos = viewRay.origin;
 	float tmin, tmax;
-	intersectRayBox(viewRay, simSpaceMin, simSpaceMax, tmin, tmax);
+	intersectRayBox(viewRay, m_box.min, m_box.max, tmin, tmax);
 	pos += tmax * viewRay.direction;
 	float viewStepSize = (tmax - tmin) / viewSamples;
 
 	Vec3 simSides{
-		simSpaceMax.x - simSpaceMin.x,
-		simSpaceMax.y - simSpaceMin.y,
-		simSpaceMax.z - simSpaceMin.z
+		m_box.max.x - m_box.min.x,
+		m_box.max.y - m_box.min.y,
+		m_box.max.z - m_box.min.z
 	};
 	float maxDistance = sqrtf(simSides.x*simSides.x + simSides.y*simSides.y + simSides.z*simSides.z); // Length of a cube diagonal
 	float lightStepSize = maxDistance / viewSamples;
-
-	Vec3 shadeColor { 0.0f, 0.0f, 0.0f };
-	Vec3 lightColor { 1.0f, 1.0f, 1.0f };
-	Vec3 sunPosition { 1.0f, 1.0f, 1.0f };
 
 	uint index = GetIndex(x, y, z);
 
@@ -276,9 +267,9 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 
 			cellDensity *= densityFactor;
 
-			Ray lightRay = Ray(pos, sunPosition.Normalized()); // normalized really ?
+			Ray lightRay = Ray(pos, m_sunPosition.Normalized()); // normalized really ?
 
-			float attenuation = 1;
+			float attenuation = 1.0f;
 			Vec3 lightPos = pos;
 
 			// Calculate light attenuation
@@ -286,16 +277,16 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 			{
 				uint lightIndex = GetIndex((uint)lightPos.x, (uint)lightPos.y, (uint)lightPos.z);
 				// Closer texture reads contribute more
-				attenuation *= 1 - m_densitySpace[lightIndex]
+				attenuation *= 1.0f - m_densitySpace[lightIndex]
 					* attenuationFactor
-					* (1 - j / lightSamples);
+					* (1.0f - j / lightSamples);
 				lightPos += lightStepSize * lightRay.direction;
 			}
 
 			// Add color depending on cell density and attenuation
-			if(cellDensity > 0.001)
+			if(cellDensity > 0.001f)
 			{
-				color = mix(color, mix(shadeColor, lightColor, attenuation),
+				color = mix(color, mix(m_shadeColor, m_lightColor, attenuation),
 					cellDensity * colorMultiplier);
 			}
 		}

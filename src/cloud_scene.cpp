@@ -127,30 +127,6 @@ struct Cloud
 
 			for (const Cloud& cloud : m_clouds)
 			{
-				/*const bool* humSpace = cloud.simulation.GetHumiditySpace();
-				const bool* actSpace = cloud.simulation.GetActiveSpace();
-				const bool* cldSpace = cloud.simulation.GetCloudSpace();
-				for(CldSim::uint x = 0; x < cloud.simulation.GetWidth(); ++x)
-				{
-					nodePos.x = x * cloud.cellSpace.x;
-					for(CldSim::uint y = 0; y < cloud.simulation.GetHeight(); ++y)
-					{
-						nodePos.y = y * cloud.cellSpace.y;
-						for(CldSim::uint z = 0; z < cloud.simulation.GetLength(); ++z)
-						{
-							nodePos.z = z * cloud.cellSpace.z;
-
-							bool hum = humSpace[cloud.simulation.GetIndex(x, y, z)];
-							bool act = actSpace[cloud.simulation.GetIndex(x, y, z)];
-							bool cld = cldSpace[cloud.simulation.GetIndex(x, y, z)];
-							u32 color = 0xff000000
-								+ (u32(cld * 0xff) << 16)
-								+ (u32(cld * 0xff) << 8)
-								+ (u32(cld * 0xff));
-							render_scene->addDebugPoint(nodePos, color, 0);
-						}
-					}
-				}*/
 				CldSim::uint size =
 					cloud.simulation.GetWidth()
 					* cloud.simulation.GetHeight()
@@ -162,7 +138,7 @@ struct Cloud
 					pos.y = p.position.y;
 					pos.z = p.position.z;
 					u32 color = 0xff000000
-						+ (u32(1 * 0xff) << 16)
+						+ (u32(p.color.y * 0xff) << 16)
 						+ (u32(p.color.y * 0xff) << 8)
 						+ (u32(p.color.z * 0xff));
 					render_scene->addDebugPoint(pos, color, 0);

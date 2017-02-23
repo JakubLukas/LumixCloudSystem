@@ -164,7 +164,7 @@ void Simulation::Simulate(uint x, uint y, uint z, float deltaTime)
 
 uint Simulation::GetIndex(uint x, uint y, uint z) const
 {
-	return (x * m_width * m_height + y * m_height + z);
+	return (x * m_height * m_length + y * m_length + z);
 }
 
 
