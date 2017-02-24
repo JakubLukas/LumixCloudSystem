@@ -137,10 +137,11 @@ struct Cloud
 					pos.x = p.position.x;
 					pos.y = p.position.y;
 					pos.z = p.position.z;
-					u32 color = 0xff000000
-						+ (u32(p.color.y * 0xff) << 16)
-						+ (u32(p.color.y * 0xff) << 8)
-						+ (u32(p.color.z * 0xff));
+					u32 color =
+						(u32(p.color.a * 0xff) << 24)
+						+ (u32(p.color.r * 0xff) << 16)
+						+ (u32(p.color.g * 0xff) << 8)
+						+ (u32(p.color.b * 0xff));
 					render_scene->addDebugPoint(pos, color, 0);
 				}
 			}
@@ -304,6 +305,76 @@ struct Cloud
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].simulation.GetExtinctionTime();
+		}
+
+
+		/*void setCameraPosition(ComponentHandle cmp, const Vec3& pos) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].renderer.SetCameraPosition({ pos.x, pos.y, pos.z });
+		}
+
+		Vec3 getCameraPosition(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			CldSim::Vec3 pos = m_clouds[entity].renderer.GetCameraPosition();
+			return Vec3(pos.x, pos.y, pos.z);
+		}
+
+
+		void setViewDirection(ComponentHandle cmp, const Vec3& dir) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].renderer.SetViewDirection({ dir.x, dir.y, dir.z });
+		}
+
+		Vec3 getViewDirection(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			CldSim::Vec3 dir = m_clouds[entity].renderer.GetViewDirection();
+			return Vec3(dir.x, dir.y, dir.z);
+		}*/
+
+
+		void setSunPosition(ComponentHandle cmp, const Vec3& pos) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].renderer.SetSunPosition({ pos.x, pos.y, pos.z });
+		}
+
+		Vec3 getSunPosition(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			CldSim::Vec3 pos = m_clouds[entity].renderer.GetSunPosition();
+			return Vec3(pos.x, pos.y, pos.z);
+		}
+
+
+		void setSunColor(ComponentHandle cmp, const Vec4& color) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].renderer.SetSunColor({ color.w, color.x, color.y, color.z });
+		}
+
+		Vec4 getSunColor(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			CldSim::Color col = m_clouds[entity].renderer.GetSunColor();
+			return Vec4(col.r, col.g, col.b, col.a);
+		}
+
+
+		void setShadeColor(ComponentHandle cmp, const Vec4& color) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].renderer.SetShadeColor({ color.w, color.x, color.y, color.z });
+		}
+
+		Vec4 getShadeColor(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			CldSim::Color col = m_clouds[entity].renderer.GetShadeColor();
+			return Vec4(col.r, col.g, col.b, col.a);
 		}
 
 

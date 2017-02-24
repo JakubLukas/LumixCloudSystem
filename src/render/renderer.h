@@ -20,6 +20,14 @@ struct Vec3
 	inline void operator -=(const Vec3& other);
 };
 
+struct Color
+{
+	float a;
+	float r;
+	float g;
+	float b;
+};
+
 
 class CloudRenderer
 {
@@ -27,7 +35,7 @@ public:
 	struct Particle
 	{
 		Vec3 position;
-		Vec3 color;
+		Color color;
 	};
 
 	~CloudRenderer();
@@ -36,8 +44,20 @@ public:
 	void CalcParticleColors(const bool* cloudSpace);
 	const Particle* GetParticles() const { return m_particles; }
 
-	void SetCameraPosition(float x, float y, float z);
-	void SetViewDirection(float x, float y, float z);
+	void SetCameraPosition(const Vec3& pos) { m_cameraPosition = pos; }
+	Vec3 GetCameraPosition() const { return m_cameraPosition; }
+
+	void SetViewDirection(const Vec3& dir) { m_viewDirection = dir; }
+	Vec3 GetViewDirection() const { return m_viewDirection; }
+
+	void SetSunPosition(const Vec3& pos) { m_sunPosition = pos; }
+	Vec3 GetSunPosition() const { return m_sunPosition; }
+
+	void SetSunColor(const Color& color) { m_sunColor = color; }
+	Color GetSunColor() const { return m_sunColor; }
+
+	void SetShadeColor(const Color& color) { m_shadeColor = color; }
+	Color GetShadeColor() const { return m_shadeColor; }
 
 
 private:
@@ -63,9 +83,9 @@ private:
 
 	Vec3 m_cameraPosition{ 0.2f, 0.2f, 1.0f };
 	Vec3 m_viewDirection{ 0.0f, 0.0f, 1.0f };
-	Vec3 m_shadeColor{ 0.0f, 0.0f, 0.0f };
-	Vec3 m_lightColor{ 1.0f, 1.0f, 1.0f };
 	Vec3 m_sunPosition{ 1.0f, 1.0f, 1.0f };
+	Color m_sunColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+	Color m_shadeColor{ 1.0f, 0.0f, 0.0f, 0.0f };
 
 	uint GetIndex(uint x, uint y, uint z) const;
 	void CalcDensity(const bool* cloudSpace);

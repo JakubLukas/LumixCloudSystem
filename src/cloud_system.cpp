@@ -43,12 +43,18 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			&CloudScene::getCloudExtinctionTime,
 			&CloudScene::setCloudExtinctionTime,
 			0.0f, 10.0f, 0.1f));
-	/*PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extinction Time",
-			&CloudScene::getCloudExtinctionTime,
-			&CloudScene::setCloudExtinctionTime,
-			0.0f, 10.0f, 0.1f));
-	PropertyRegister::*/
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec3, CloudScene>)("Sun position",
+			&CloudScene::getSunPosition,
+			&CloudScene::setSunPosition));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec4, CloudScene>)("Sun color",
+			&CloudScene::getSunColor,
+			&CloudScene::setSunColor));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec4, CloudScene>)("Shade color",
+			&CloudScene::getShadeColor,
+			&CloudScene::setShadeColor));
 }
 
 

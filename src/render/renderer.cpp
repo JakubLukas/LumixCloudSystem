@@ -80,12 +80,13 @@ inline static float mix(float a, float b, float t)
 	return a * (1.0f - t) + b * t;
 }
 
-inline static Vec3 mix(Vec3 a, Vec3 b, float t)
+inline static Color mix(Color a, Color b, float t)
 {
-	return Vec3 {
-		a.x * (1.0f - t) + b.x * t,
-		a.y * (1.0f - t) + b.y * t,
-		a.z * (1.0f - t) + b.z * t
+	return Color{
+		a.a * (1.0f - t) + b.a * t,
+		a.r * (1.0f - t) + b.r * t,
+		a.g * (1.0f - t) + b.g * t,
+		a.b * (1.0f - t) + b.b * t
 	};
 }
 
@@ -242,7 +243,7 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 
 	Ray viewRay = Ray(m_cameraPosition, m_viewDirection.Normalized());
 
-	Vec3 color { 0.0f, 0.0f, 0.0f };
+	Color color { 1.0f, 0.0f, 0.0f, 0.0f };
 	Vec3 pos = viewRay.origin;
 	float tmin, tmax;
 	intersectRayBox(viewRay, m_box.min, m_box.max, tmin, tmax);
@@ -286,7 +287,7 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 			// Add color depending on cell density and attenuation
 			if(cellDensity > 0.001f)
 			{
-				color = mix(color, mix(m_shadeColor, m_lightColor, attenuation),
+				color = mix(color, mix(m_shadeColor, m_sunColor, attenuation),
 					cellDensity * colorMultiplier);
 			}
 		}

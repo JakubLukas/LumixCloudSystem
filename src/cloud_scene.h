@@ -31,6 +31,18 @@ namespace Lumix
 		virtual float getCloudExtinctionProbability(ComponentHandle cmp) = 0;
 		virtual void setCloudExtinctionTime(ComponentHandle cmp, const float value) = 0;
 		virtual float getCloudExtinctionTime(ComponentHandle cmp) = 0;
+
+		//virtual void setCameraPosition(ComponentHandle cmp, const Vec3& pos) = 0;
+		//virtual Vec3 getCameraPosition(ComponentHandle cmp) = 0;
+		//virtual void setViewDirection(ComponentHandle cmp, const Vec3& dir) = 0;
+		//virtual Vec3 getViewDirection(ComponentHandle cmp) = 0;
+		virtual void setSunPosition(ComponentHandle cmp, const Vec3& pos) = 0;
+		virtual Vec3 getSunPosition(ComponentHandle cmp) = 0;
+		virtual void setSunColor(ComponentHandle cmp, const Vec4& color) = 0;
+		virtual Vec4 getSunColor(ComponentHandle cmp) = 0;
+		virtual void setShadeColor(ComponentHandle cmp, const Vec4& color) = 0;
+		virtual Vec4 getShadeColor(ComponentHandle cmp) = 0;
+
 		virtual void restartSimulation(ComponentHandle cmp) = 0;
 
 	};
