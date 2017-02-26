@@ -308,32 +308,30 @@ struct Cloud
 		}
 
 
-		/*void setCameraPosition(ComponentHandle cmp, const Vec3& pos) override
+		void setViewSamplesCount(ComponentHandle cmp, const int count) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].renderer.SetCameraPosition({ pos.x, pos.y, pos.z });
+			m_clouds[entity].renderer.SetViewSamplesCount((unsigned int)count);
 		}
 
-		Vec3 getCameraPosition(ComponentHandle cmp) override
+		int getViewSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			CldSim::Vec3 pos = m_clouds[entity].renderer.GetCameraPosition();
-			return Vec3(pos.x, pos.y, pos.z);
+			return m_clouds[entity].renderer.GetViewSamplesCount();
 		}
 
 
-		void setViewDirection(ComponentHandle cmp, const Vec3& dir) override
+		void setLightSamplesCount(ComponentHandle cmp, const int count) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].renderer.SetViewDirection({ dir.x, dir.y, dir.z });
+			m_clouds[entity].renderer.SetLightSamplesCount((unsigned int)count);
 		}
 
-		Vec3 getViewDirection(ComponentHandle cmp) override
+		int getLightSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
-			CldSim::Vec3 dir = m_clouds[entity].renderer.GetViewDirection();
-			return Vec3(dir.x, dir.y, dir.z);
-		}*/
+			return m_clouds[entity].renderer.GetLightSamplesCount();
+		}
 
 
 		void setSunPosition(ComponentHandle cmp, const Vec3& pos) override

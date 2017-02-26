@@ -44,6 +44,12 @@ public:
 	void CalcParticleColors(const bool* cloudSpace);
 	const Particle* GetParticles() const { return m_particles; }
 
+	void SetViewSamplesCount(const uint count) { m_viewSamples = count; }
+	uint GetViewSamplesCount() const { return m_viewSamples; }
+
+	void SetLightSamplesCount(const uint count) { m_lightSamples = count; }
+	uint GetLightSamplesCount() const { return m_lightSamples; }
+
 	void SetCameraPosition(const Vec3& pos) { m_cameraPosition = pos; }
 	Vec3 GetCameraPosition() const { return m_cameraPosition; }
 
@@ -67,8 +73,8 @@ private:
 		Vec3 max;
 	};
 
-	const uint viewSamples = 1;
-	const uint lightSamples = 1;
+	uint m_viewSamples = 1;
+	uint m_lightSamples = 1;
 	const float densityCutoff = 0.06f;
 	const float densityFactor = 0.35f;
 	const float attenuationFactor = 0.15f;

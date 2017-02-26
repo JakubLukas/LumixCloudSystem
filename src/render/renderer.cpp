@@ -248,7 +248,7 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 	float tmin, tmax;
 	intersectRayBox(viewRay, m_box.min, m_box.max, tmin, tmax);
 	pos += tmax * viewRay.direction;
-	float viewStepSize = (tmax - tmin) / viewSamples;
+	float viewStepSize = (tmax - tmin) / m_viewSamples;
 
 	Vec3 simSides{
 		m_box.max.x - m_box.min.x,
@@ -256,11 +256,11 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 		m_box.max.z - m_box.min.z
 	};
 	float maxDistance = sqrtf(simSides.x*simSides.x + simSides.y*simSides.y + simSides.z*simSides.z); // Length of a cube diagonal
-	float lightStepSize = maxDistance / viewSamples;
+	float lightStepSize = maxDistance / m_viewSamples;
 
 	uint index = GetIndex(x, y, z);
 
-	for(uint i = 0; i < viewSamples; ++i)
+	for(uint i = 0; i < m_viewSamples; ++i)
 	{
 		float cellDensity = m_densitySpace[index];
 		if(cellDensity > densityCutoff)
@@ -274,13 +274,13 @@ inline void CloudRenderer::CalcSingleParticleColor(uint x, uint y, uint z)
 			Vec3 lightPos = pos;
 
 			// Calculate light attenuation
-			for(uint j = 0; j < lightSamples; ++j)
+			for(uint j = 0; j < m_lightSamples; ++j)
 			{
 				uint lightIndex = GetIndex((uint)lightPos.x, (uint)lightPos.y, (uint)lightPos.z);
 				// Closer texture reads contribute more
 				attenuation *= 1.0f - m_densitySpace[lightIndex]
 					* attenuationFactor
-					* (1.0f - j / lightSamples);
+					* (1.0f - j / m_lightSamples);
 				lightPos += lightStepSize * lightRay.direction;
 			}
 
