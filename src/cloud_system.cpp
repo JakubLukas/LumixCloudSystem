@@ -44,11 +44,11 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			&CloudScene::setCloudExtinctionTime,
 			0.0f, 10.0f, 0.1f));
 	PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, IntPropertyDescriptor<CloudScene>)("View samples",
+		LUMIX_NEW(allocator, NumericPropertyDescriptor<unsigned int, CloudScene>)("View samples",
 			&CloudScene::getViewSamplesCount,
 			&CloudScene::setViewSamplesCount));
 	PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, IntPropertyDescriptor<CloudScene>)("Light samples",
+		LUMIX_NEW(allocator, NumericPropertyDescriptor<unsigned int, CloudScene>)("Light samples",
 			&CloudScene::getLightSamplesCount,
 			&CloudScene::setLightSamplesCount));
 	PropertyRegister::add("cloud",

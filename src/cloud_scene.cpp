@@ -308,26 +308,26 @@ struct Cloud
 		}
 
 
-		void setViewSamplesCount(ComponentHandle cmp, const int count) override
+		void setViewSamplesCount(ComponentHandle cmp, const unsigned int count) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].renderer.SetViewSamplesCount((unsigned int)count);
+			m_clouds[entity].renderer.SetViewSamplesCount(count);
 		}
 
-		int getViewSamplesCount(ComponentHandle cmp) override
+		unsigned int getViewSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].renderer.GetViewSamplesCount();
 		}
 
 
-		void setLightSamplesCount(ComponentHandle cmp, const int count) override
+		void setLightSamplesCount(ComponentHandle cmp, const unsigned int count) override
 		{
 			Entity entity = { cmp.index };
-			m_clouds[entity].renderer.SetLightSamplesCount((unsigned int)count);
+			m_clouds[entity].renderer.SetLightSamplesCount(count);
 		}
 
-		int getLightSamplesCount(ComponentHandle cmp) override
+		unsigned int getLightSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].renderer.GetLightSamplesCount();
