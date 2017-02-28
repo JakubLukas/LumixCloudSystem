@@ -13,6 +13,9 @@
 namespace Lumix
 {
 
+static const ResourceType MATERIAL_TYPE("material");
+
+
 static void registerProperties(Lumix::IAllocator& allocator)
 {
 	PropertyRegister::add("cloud",
@@ -43,14 +46,16 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			&CloudScene::getCloudExtinctionTime,
 			&CloudScene::setCloudExtinctionTime,
 			0.0f, 10.0f, 0.1f));
-	PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, NumericPropertyDescriptor<unsigned int, CloudScene>)("View samples",
-			&CloudScene::getViewSamplesCount,
-			&CloudScene::setViewSamplesCount));
-	PropertyRegister::add("cloud",
-		LUMIX_NEW(allocator, NumericPropertyDescriptor<unsigned int, CloudScene>)("Light samples",
-			&CloudScene::getLightSamplesCount,
-			&CloudScene::setLightSamplesCount));
+	auto* viewSampDesc = LUMIX_NEW(allocator, IntPropertyDescriptor<CloudScene>)("View samples",
+		&CloudScene::getViewSamplesCount,
+		&CloudScene::setViewSamplesCount);
+	viewSampDesc->setLimit(0, 200);
+	PropertyRegister::add("cloud", viewSampDesc);
+	auto* lightSampDesc = LUMIX_NEW(allocator, IntPropertyDescriptor<CloudScene>)("Light samples",
+		&CloudScene::getLightSamplesCount,
+		&CloudScene::setLightSamplesCount);
+	lightSampDesc->setLimit(0, 200);
+	PropertyRegister::add("cloud", lightSampDesc);
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec3, CloudScene>)("Sun position",
 			&CloudScene::getSunPosition,
@@ -63,6 +68,12 @@ static void registerProperties(Lumix::IAllocator& allocator)
 		LUMIX_NEW(allocator, SimplePropertyDescriptor<Vec4, CloudScene>)("Shade color",
 			&CloudScene::getShadeColor,
 			&CloudScene::setShadeColor));
+	PropertyRegister::add("cloud",
+		LUMIX_NEW(allocator, ResourcePropertyDescriptor<CloudScene>)("Material",
+			&CloudScene::getCloudMaterialPath,
+			&CloudScene::setCloudMaterialPath,
+			"Material (*.mat)",
+			MATERIAL_TYPE));
 }
 
 
@@ -88,7 +99,7 @@ static void registerProperties(Lumix::IAllocator& allocator)
 
 		void createScenes(Universe& universe) override
 		{
-			auto* scene = CloudScene::createInstance(*this, universe, m_engine.getAllocator());
+			auto* scene = CloudScene::createInstance(*this, m_engine, universe, m_engine.getAllocator());
 			universe.addScene(scene);
 		}
 

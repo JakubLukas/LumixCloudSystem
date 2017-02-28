@@ -3,6 +3,7 @@
 #include "engine/iplugin.h"
 #include "cloud_system.h"
 #include "engine/vec.h"
+#include "engine/path.h"
 
 
 namespace Lumix
@@ -14,6 +15,7 @@ namespace Lumix
 	public:
 
 		static CloudScene* createInstance(CloudSystem& system,
+			Engine& engine,
 			Universe& universe,
 			class IAllocator& allocator);
 
@@ -32,16 +34,19 @@ namespace Lumix
 		virtual void setCloudExtinctionTime(ComponentHandle cmp, const float value) = 0;
 		virtual float getCloudExtinctionTime(ComponentHandle cmp) = 0;
 
-		virtual void setViewSamplesCount(ComponentHandle cmp, const unsigned int count) = 0;
-		virtual unsigned int getViewSamplesCount(ComponentHandle cmp) = 0;
-		virtual void setLightSamplesCount(ComponentHandle cmp, const unsigned int count) = 0;
-		virtual unsigned int getLightSamplesCount(ComponentHandle cmp) = 0;
+		virtual void setViewSamplesCount(ComponentHandle cmp, const int count) = 0;
+		virtual int getViewSamplesCount(ComponentHandle cmp) = 0;
+		virtual void setLightSamplesCount(ComponentHandle cmp, const int count) = 0;
+		virtual int getLightSamplesCount(ComponentHandle cmp) = 0;
 		virtual void setSunPosition(ComponentHandle cmp, const Vec3& pos) = 0;
 		virtual Vec3 getSunPosition(ComponentHandle cmp) = 0;
 		virtual void setSunColor(ComponentHandle cmp, const Vec4& color) = 0;
 		virtual Vec4 getSunColor(ComponentHandle cmp) = 0;
 		virtual void setShadeColor(ComponentHandle cmp, const Vec4& color) = 0;
 		virtual Vec4 getShadeColor(ComponentHandle cmp) = 0;
+
+		virtual void setCloudMaterialPath(ComponentHandle cmp, const Path& path) = 0;
+		virtual Path getCloudMaterialPath(ComponentHandle cmp) = 0;
 
 		virtual void restartSimulation(ComponentHandle cmp) = 0;
 

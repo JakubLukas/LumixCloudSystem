@@ -6,8 +6,13 @@
 #include "engine/property_register.h"
 #include "engine/serializer.h"
 #include "engine/blob.h"
+#include "engine/engine.h"
+#include "engine/resource.h"
+#include "engine/resource_manager_base.h"
+#include "engine/resource_manager.h"
 
 #include "renderer/render_scene.h"
+#include "renderer/material.h"
 #include "engine/crc32.h"
 
 
@@ -19,6 +24,7 @@ namespace Lumix
 {
 
 static const ComponentType CLOUD_TYPE = PropertyRegister::getComponentType("cloud");
+static const ResourceType MATERIAL_TYPE("material");
 
 
 struct Cloud
@@ -27,6 +33,7 @@ struct Cloud
 	Vec3 cellSpace;
 	CldSim::Simulation simulation;
 	CldSim::CloudRenderer renderer;
+	Material* material = nullptr;
 };
 
 
@@ -40,8 +47,9 @@ struct Cloud
 		};
 
 
-		CloudSceneImpl(CloudSystem& system, Universe& universe, IAllocator& allocator)
+		CloudSceneImpl(CloudSystem& system, Engine& engine, Universe& universe, IAllocator& allocator)
 			: m_system(system)
+			, m_engine(engine)
 			, m_universe(universe)
 			, m_allocator(allocator)
 			, m_clouds(allocator)
@@ -308,26 +316,26 @@ struct Cloud
 		}
 
 
-		void setViewSamplesCount(ComponentHandle cmp, const unsigned int count) override
+		void setViewSamplesCount(ComponentHandle cmp, const int count) override
 		{
 			Entity entity = { cmp.index };
 			m_clouds[entity].renderer.SetViewSamplesCount(count);
 		}
 
-		unsigned int getViewSamplesCount(ComponentHandle cmp) override
+		int getViewSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].renderer.GetViewSamplesCount();
 		}
 
 
-		void setLightSamplesCount(ComponentHandle cmp, const unsigned int count) override
+		void setLightSamplesCount(ComponentHandle cmp, const int count) override
 		{
 			Entity entity = { cmp.index };
 			m_clouds[entity].renderer.SetLightSamplesCount(count);
 		}
 
-		unsigned int getLightSamplesCount(ComponentHandle cmp) override
+		int getLightSamplesCount(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].renderer.GetLightSamplesCount();
@@ -376,6 +384,28 @@ struct Cloud
 		}
 
 
+		void setCloudMaterialPath(ComponentHandle cmp, const Path& path) override
+		{
+			Entity entity = { cmp.index };
+
+			auto* manager = m_engine.getResourceManager().get(MATERIAL_TYPE);
+			Material* material = static_cast<Material*>(manager->load(path));
+			m_clouds[entity].material = material;
+		}
+
+
+		Path getCloudMaterialPath(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+
+			Cloud& cloud = m_clouds[entity];
+			if (cloud.material == nullptr)
+				return Path("");
+
+			return cloud.material->getPath();
+		}
+
+
 		void restartSimulation(ComponentHandle cmp) override
 		{
 			Entity entity = { cmp.index };
@@ -386,15 +416,17 @@ struct Cloud
 		IAllocator& m_allocator;
 		Universe& m_universe;
 		CloudSystem& m_system;
+		Engine& m_engine;
 		AssociativeArray<Entity, Cloud> m_clouds;
 	};
 
 
 	CloudScene* CloudScene::createInstance(CloudSystem& system,
+		Engine& engine,
 		Universe& universe,
 		class IAllocator& allocator)
 	{
-		return LUMIX_NEW(allocator, CloudSceneImpl)(system, universe, allocator);
+		return LUMIX_NEW(allocator, CloudSceneImpl)(system, engine, universe, allocator);
 	}
 
 	void CloudScene::destroyInstance(CloudScene* scene)
