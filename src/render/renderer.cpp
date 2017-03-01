@@ -7,7 +7,7 @@ namespace CldSim
 {
 
 
-void Vec3::Normalize()
+inline void Vec3::Normalize()
 {
 	float lenInv = 1.0f / sqrtf(x*x + y*y + z*z);
 	x *= lenInv;
@@ -16,7 +16,7 @@ void Vec3::Normalize()
 }
 
 
-Vec3 Vec3::Normalized()
+inline Vec3 Vec3::Normalized()
 {
 	float lenInv = 1.0f / sqrtf(x*x + y*y + z*z);
 	return Vec3 {
@@ -27,21 +27,21 @@ Vec3 Vec3::Normalized()
 }
 
 
-void Vec3::operator +=(const Vec3& other)
+inline void Vec3::operator +=(const Vec3& other)
 {
 	x += other.x;
 	y += other.y;
 	z += other.z;
 }
 
-void Vec3::operator -=(const Vec3& other)
+inline void Vec3::operator -=(const Vec3& other)
 {
 	x -= other.x;
 	y -= other.y;
 	z -= other.z;
 }
 
-inline static Vec3 operator *(float f, const Vec3& vec)
+inline Vec3 operator *(float f, const Vec3& vec)
 {
 	return Vec3{
 		f * vec.x,

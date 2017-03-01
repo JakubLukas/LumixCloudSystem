@@ -19,6 +19,8 @@ struct Vec3
 	inline void operator +=(const Vec3& other);
 	inline void operator -=(const Vec3& other);
 };
+inline Vec3 operator *(float f, const Vec3& vec);
+
 
 struct Color
 {

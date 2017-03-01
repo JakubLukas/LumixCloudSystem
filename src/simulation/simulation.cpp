@@ -101,14 +101,6 @@ void Simulation::Restart()
 
 void Simulation::Update(float deltaTime)
 {
-	/*static float timePassed = 0.0f;
-	static const float STEP = 1.0f;
-	timePassed += deltaTime;
-	if (timePassed < STEP)
-		return;
-
-	timePassed -= STEP;*/
-
 	for (uint x = 0; x < m_width; ++x)
 	{
 		for (uint y = 0; y < m_height; ++y)

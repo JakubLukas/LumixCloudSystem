@@ -52,7 +52,7 @@ private:
 	uint m_actualIndex;
 
 
-	bool* m_hum[2];//TODO: optimize to bit field
+	bool* m_hum[2];//TODO: optimize to bit field?
 	bool* m_act[2];
 	bool* m_cld[2];
 	bool* m_ext[2];
