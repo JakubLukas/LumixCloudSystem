@@ -13,11 +13,14 @@
 
 #include "renderer/render_scene.h"
 #include "renderer/material.h"
+#include "renderer/shader.h"
 #include "engine/crc32.h"
 
 
 #include "simulation/simulation.h"
 #include "render/renderer.h"
+
+#include "engine/lua_wrapper.h"
 
 
 namespace Lumix
@@ -34,6 +37,15 @@ struct Cloud
 	CldSim::Simulation simulation;
 	CldSim::CloudRenderer renderer;
 	Material* material = nullptr;
+};
+
+
+struct BaseVertex //TODO
+{
+	float x, y, z;
+	u32 rgba;
+	float u;
+	float v;
 };
 
 
@@ -56,6 +68,19 @@ struct Cloud
 		{
 			//m_universe.entityTransformed().bind<NavigationSceneImpl, &NavigationSceneImpl::onEntityMoved>(this);
 			universe.registerComponentType(CLOUD_TYPE, this, &CloudSceneImpl::serializeCloud, &CloudSceneImpl::deserializeCloud);
+
+			m_base_vertex_decl.begin()
+				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+				.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+				.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+				.end(); //TODO
+
+			m_cloud_matrix_uniform = bgfx::createUniform("u_cloudMatrix", bgfx::UniformType::Mat4);
+		}
+
+		~CloudSceneImpl()
+		{
+			bgfx::destroyUniform(m_cloud_matrix_uniform);
 		}
 
 		void clear() override
@@ -413,11 +438,90 @@ struct Cloud
 		}
 
 
+		void createCloudBuffers() //TODO
+		{
+			BaseVertex vertices[] = {
+				{ -1, -1, 1, 0xffffffff, 0, 0 },
+				{ -1,  1, 1, 0xffffffff, 0, 1 },
+				{ 1,  1, 1, 0xffffffff, 1, 1 },
+				{ 1, -1, 1, 0xffffffff, 1, 0 },
+			};
+
+			const bgfx::Memory* vertex_mem = bgfx::copy(vertices, sizeof(vertices));
+			m_particle_vertex_buffer = bgfx::createVertexBuffer(vertex_mem, m_base_vertex_decl);
+
+			u16 indices[] = { 0, 1, 2, 0, 2, 3 };
+			const bgfx::Memory* index_mem = bgfx::copy(indices, sizeof(indices));
+			m_particle_index_buffer = bgfx::createIndexBuffer(index_mem);
+		}
+
+
+		void renderClouds()
+		{
+			for(const Cloud& cloud : m_clouds)
+			{
+
+
+
+
+
+
+				Material* material = cloud.material;
+				const bgfx::InstanceDataBuffer* instance_buffer = nullptr;
+
+				auto& view = *m_current_view;
+				Matrix mtx = m_universe.getMatrix(cloud.entity);
+
+				struct Instance
+				{
+					Vec4 pos;
+					Vec4 alpha_and_rotation;
+				};
+
+				instance_buffer = bgfx::allocInstanceDataBuffer(count, sizeof(Instance));
+				Instance* instance = (Instance*)instance_buffer->data;
+				for(int i = 0, c = count; i < c; ++i)
+				{
+					instance->pos = Vec4(emitter.m_position[i], emitter.m_size[i]);
+					instance->alpha_and_rotation = Vec4(emitter.m_alpha[i], emitter.m_rotation[i], 0, 0);
+					++instance;
+				}
+				//draw(instance_buffer, emitter.m_life.size());
+
+				executeCommandBuffer(material->getCommandBuffer(), material);
+				executeCommandBuffer(view.command_buffer.buffer, material);
+
+				bgfx::setInstanceDataBuffer(instance_buffer, count);
+				bgfx::setVertexBuffer(m_particle_vertex_buffer);
+				bgfx::setIndexBuffer(m_particle_index_buffer);
+				bgfx::setStencil(view.stencil, BGFX_STENCIL_NONE);
+				bgfx::setState(view.render_state | material->getRenderStates());
+				++m_stats.draw_call_count;
+				m_stats.instance_count += count;
+				m_stats.triangle_count += count * 2;
+				bgfx::setUniform(m_cloud_matrix_uniform, &mtx);
+				bgfx::submit(view.bgfx_id, material->getShaderInstance().getProgramHandle(view.pass_idx));
+
+
+
+
+
+
+
+			}
+		}
+
+
 		IAllocator& m_allocator;
 		Universe& m_universe;
 		CloudSystem& m_system;
 		Engine& m_engine;
 		AssociativeArray<Entity, Cloud> m_clouds;
+
+		bgfx::VertexBufferHandle m_particle_vertex_buffer; //TODO
+		bgfx::IndexBufferHandle m_particle_index_buffer; //TODO
+		bgfx::VertexDecl m_base_vertex_decl; //TODO
+		bgfx::UniformHandle m_cloud_matrix_uniform;
 	};
 
 
@@ -432,6 +536,25 @@ struct Cloud
 	void CloudScene::destroyInstance(CloudScene* scene)
 	{
 		LUMIX_DELETE(static_cast<CloudSceneImpl*>(scene)->m_allocator, scene);
+	}
+
+	void CloudScene::registerLuaAPI(lua_State* L)
+	{
+		auto registerCFunction = [L](const char* name, lua_CFunction function)
+		{
+			lua_pushcfunction(L, function);
+			lua_setglobal(L, name);
+		};
+
+		#define REGISTER_FUNCTION(name) \
+		do {\
+			auto f = &LuaWrapper::wrapMethod<CloudSceneImpl, decltype(&CloudSceneImpl::name), &CloudSceneImpl::name>; \
+			registerCFunction(#name, f); \
+		} while(false) \
+
+		REGISTER_FUNCTION(renderClouds);
+
+		#undef REGISTER_FUNCTION
 	}
 
 

@@ -6,6 +6,9 @@
 #include "engine/path.h"
 
 
+struct lua_State;
+
+
 namespace Lumix
 {
 
@@ -20,6 +23,9 @@ namespace Lumix
 			class IAllocator& allocator);
 
 		static void destroyInstance(CloudScene* scene);
+
+		static void registerLuaAPI(lua_State* state);
+
 
 		virtual void setCloudSize(ComponentHandle cmp, const Vec3& size) = 0;
 		virtual Vec3 getCloudSize(ComponentHandle cmp) = 0;
@@ -49,7 +55,6 @@ namespace Lumix
 		virtual Path getCloudMaterialPath(ComponentHandle cmp) = 0;
 
 		virtual void restartSimulation(ComponentHandle cmp) = 0;
-
 	};
 
 
