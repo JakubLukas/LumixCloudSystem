@@ -19,6 +19,7 @@
 
 #include "simulation/simulation.h"
 #include "render/renderer.h"
+#include "renderer/pipeline.h"
 
 #include "engine/lua_wrapper.h"
 
@@ -456,7 +457,7 @@ struct BaseVertex //TODO
 		}
 
 
-		void renderClouds()
+		void renderClouds(Pipeline* pipeline/*, View* view*/)
 		{
 			for(const Cloud& cloud : m_clouds)
 			{
@@ -469,40 +470,47 @@ struct BaseVertex //TODO
 				Material* material = cloud.material;
 				const bgfx::InstanceDataBuffer* instance_buffer = nullptr;
 
-				auto& view = *m_current_view;
+				auto& view = *pipeline->getCurrentView();
 				Matrix mtx = m_universe.getMatrix(cloud.entity);
 
 				struct Instance
 				{
 					Vec4 pos;
-					Vec4 alpha_and_rotation;
+					Vec4 color;
 				};
+
+				int count =
+					cloud.simulation.GetWidth()
+					* cloud.simulation.GetHeight()
+					* cloud.simulation.GetLength();
+				const CldSim::CloudRenderer::Particle* particle = cloud.renderer.GetParticles();
 
 				instance_buffer = bgfx::allocInstanceDataBuffer(count, sizeof(Instance));
 				Instance* instance = (Instance*)instance_buffer->data;
 				for(int i = 0, c = count; i < c; ++i)
 				{
-					instance->pos = Vec4(emitter.m_position[i], emitter.m_size[i]);
-					instance->alpha_and_rotation = Vec4(emitter.m_alpha[i], emitter.m_rotation[i], 0, 0);
+					instance->pos = Vec4(particle->position.x, particle->position.y, particle->position.z, 1.0f);
+					instance->color = Vec4(particle->color.a, particle->color.r, particle->color.g, particle->color.b);
 					++instance;
+					++particle;
 				}
 				//draw(instance_buffer, emitter.m_life.size());
-
-				executeCommandBuffer(material->getCommandBuffer(), material);
-				executeCommandBuffer(view.command_buffer.buffer, material);
+				//m_universe.
+				pipeline->executeCommandBuffer(material->getCommandBuffer(), material);
+				pipeline->executeCommandBuffer(view.command_buffer.buffer, material);//////////////////////////////////////
 
 				bgfx::setInstanceDataBuffer(instance_buffer, count);
 				bgfx::setVertexBuffer(m_particle_vertex_buffer);
 				bgfx::setIndexBuffer(m_particle_index_buffer);
-				bgfx::setStencil(view.stencil, BGFX_STENCIL_NONE);
-				bgfx::setState(view.render_state | material->getRenderStates());
-				++m_stats.draw_call_count;
-				m_stats.instance_count += count;
-				m_stats.triangle_count += count * 2;
+				bgfx::setStencil(view.stencil, BGFX_STENCIL_NONE);//////////////////////////////////////
+				bgfx::setState(view.render_state | material->getRenderStates());//////////////////////////////////////
+				//++m_stats.draw_call_count;
+				//m_stats.instance_count += count;
+				//m_stats.triangle_count += count * 2;
 				bgfx::setUniform(m_cloud_matrix_uniform, &mtx);
-				bgfx::submit(view.bgfx_id, material->getShaderInstance().getProgramHandle(view.pass_idx));
+				bgfx::submit(view.bgfx_id, material->getShaderInstance().getProgramHandle(view.pass_idx));//////////////////////////////////////
 
-
+				
 
 
 

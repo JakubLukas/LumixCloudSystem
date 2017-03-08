@@ -83,6 +83,8 @@ static void registerProperties(Lumix::IAllocator& allocator)
 			: m_engine(engine)
 		{
 			registerProperties(engine.getAllocator());
+
+			CloudScene::registerLuaAPI(m_engine.getState());
 		}
 
 
