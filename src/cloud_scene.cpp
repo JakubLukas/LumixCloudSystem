@@ -38,6 +38,7 @@ struct Cloud
 	CldSim::Simulation simulation;
 	CldSim::CloudRenderer renderer;
 	Material* material = nullptr;
+	bool isSimulating = false;
 };
 
 
@@ -70,22 +71,33 @@ struct BaseVertex //TODO
 			//m_universe.entityTransformed().bind<NavigationSceneImpl, &NavigationSceneImpl::onEntityMoved>(this);
 			universe.registerComponentType(CLOUD_TYPE, this, &CloudSceneImpl::serializeCloud, &CloudSceneImpl::deserializeCloud);
 
-			m_base_vertex_decl.begin()
-				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-				.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-				.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-				.end(); //TODO
-
+			createCloudBuffers();
 			m_cloud_matrix_uniform = bgfx::createUniform("u_cloudMatrix", bgfx::UniformType::Mat4);
 		}
 
 		~CloudSceneImpl()
 		{
 			bgfx::destroyUniform(m_cloud_matrix_uniform);
+			bgfx::destroyVertexBuffer(m_particle_vertex_buffer);
+			bgfx::destroyIndexBuffer(m_particle_index_buffer);
+
+			auto* manager = m_engine.getResourceManager().get(MATERIAL_TYPE);
+			for(Cloud& cloud : m_clouds)
+			{
+				if(cloud.material != nullptr)
+					manager->unload(*cloud.material);
+			}
 		}
 
 		void clear() override
 		{
+			auto* manager = m_engine.getResourceManager().get(MATERIAL_TYPE);
+			for(Cloud& cloud : m_clouds)
+			{
+				if(cloud.material != nullptr)
+					manager->unload(*cloud.material);
+			}
+
 			m_clouds.clear();
 		};
 
@@ -188,11 +200,12 @@ struct BaseVertex //TODO
 
 			for(Cloud& cloud : m_clouds)
 			{
-				cloud.simulation.Update(time_delta);
-				cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
+				if(cloud.isSimulating)
+				{
+					cloud.simulation.Update(time_delta);
+					cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
+				}
 			}
-
-			debugDraw();
 		}
 
 
@@ -415,8 +428,12 @@ struct BaseVertex //TODO
 			Entity entity = { cmp.index };
 
 			auto* manager = m_engine.getResourceManager().get(MATERIAL_TYPE);
-			Material* material = static_cast<Material*>(manager->load(path));
-			m_clouds[entity].material = material;
+
+			Material* material = m_clouds[entity].material;
+			if(material != nullptr)
+				manager->unload(*material);
+
+			m_clouds[entity].material = static_cast<Material*>(manager->load(path));
 		}
 
 
@@ -439,38 +456,52 @@ struct BaseVertex //TODO
 		}
 
 
+		void setIsSimulating(ComponentHandle cmp, const bool isSimulating) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].isSimulating = isSimulating;
+		}
+
+		bool getIsSimulating(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].isSimulating;
+		}
+
+
 		void createCloudBuffers() //TODO
 		{
-			BaseVertex vertices[] = {
+			const BaseVertex vertices[] = {
 				{ -1, -1, 1, 0xffffffff, 0, 0 },
 				{ -1,  1, 1, 0xffffffff, 0, 1 },
 				{ 1,  1, 1, 0xffffffff, 1, 1 },
 				{ 1, -1, 1, 0xffffffff, 1, 0 },
 			};
 
+			bgfx::VertexDecl m_base_vertex_decl;
+			m_base_vertex_decl.begin()
+				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+				.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+				.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+				.end();
+
 			const bgfx::Memory* vertex_mem = bgfx::copy(vertices, sizeof(vertices));
 			m_particle_vertex_buffer = bgfx::createVertexBuffer(vertex_mem, m_base_vertex_decl);
 
-			u16 indices[] = { 0, 1, 2, 0, 2, 3 };
+			const u16 indices[] = { 0, 1, 2, 0, 2, 3 };
 			const bgfx::Memory* index_mem = bgfx::copy(indices, sizeof(indices));
 			m_particle_index_buffer = bgfx::createIndexBuffer(index_mem);
 		}
 
 
-		void renderClouds(Pipeline* pipeline/*, View* view*/)
+		void renderClouds(Pipeline* pipeline)
 		{
 			for(const Cloud& cloud : m_clouds)
 			{
-
-
-
-
-
-
 				Material* material = cloud.material;
-				const bgfx::InstanceDataBuffer* instance_buffer = nullptr;
+				if(material == nullptr)
+					continue;//TODO
 
-				auto& view = *pipeline->getCurrentView();
 				Matrix mtx = m_universe.getMatrix(cloud.entity);
 
 				struct Instance
@@ -485,37 +516,19 @@ struct BaseVertex //TODO
 					* cloud.simulation.GetLength();
 				const CldSim::CloudRenderer::Particle* particle = cloud.renderer.GetParticles();
 
-				instance_buffer = bgfx::allocInstanceDataBuffer(count, sizeof(Instance));
+				const bgfx::InstanceDataBuffer* instance_buffer = bgfx::allocInstanceDataBuffer(count, sizeof(Instance));
 				Instance* instance = (Instance*)instance_buffer->data;
 				for(int i = 0, c = count; i < c; ++i)
 				{
 					instance->pos = Vec4(particle->position.x, particle->position.y, particle->position.z, 1.0f);
-					instance->color = Vec4(particle->color.a, particle->color.r, particle->color.g, particle->color.b);
+					instance->color = Vec4(particle->color.r, particle->color.g, particle->color.b, particle->color.a);
 					++instance;
 					++particle;
 				}
-				//draw(instance_buffer, emitter.m_life.size());
-				//m_universe.
-				pipeline->executeCommandBuffer(material->getCommandBuffer(), material);
-				pipeline->executeCommandBuffer(view.command_buffer.buffer, material);//////////////////////////////////////
 
-				bgfx::setInstanceDataBuffer(instance_buffer, count);
-				bgfx::setVertexBuffer(m_particle_vertex_buffer);
-				bgfx::setIndexBuffer(m_particle_index_buffer);
-				bgfx::setStencil(view.stencil, BGFX_STENCIL_NONE);//////////////////////////////////////
-				bgfx::setState(view.render_state | material->getRenderStates());//////////////////////////////////////
-				//++m_stats.draw_call_count;
-				//m_stats.instance_count += count;
-				//m_stats.triangle_count += count * 2;
+
 				bgfx::setUniform(m_cloud_matrix_uniform, &mtx);
-				bgfx::submit(view.bgfx_id, material->getShaderInstance().getProgramHandle(view.pass_idx));//////////////////////////////////////
-
-				
-
-
-
-
-
+				pipeline->render(m_particle_vertex_buffer, m_particle_index_buffer, *instance_buffer, count, *material);
 			}
 		}
 
@@ -528,7 +541,6 @@ struct BaseVertex //TODO
 
 		bgfx::VertexBufferHandle m_particle_vertex_buffer; //TODO
 		bgfx::IndexBufferHandle m_particle_index_buffer; //TODO
-		bgfx::VertexDecl m_base_vertex_decl; //TODO
 		bgfx::UniformHandle m_cloud_matrix_uniform;
 	};
 

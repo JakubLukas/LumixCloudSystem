@@ -55,6 +55,8 @@ namespace Lumix
 		virtual Path getCloudMaterialPath(ComponentHandle cmp) = 0;
 
 		virtual void restartSimulation(ComponentHandle cmp) = 0;
+		virtual void setIsSimulating(ComponentHandle cmp, const bool isSimulating) = 0;
+		virtual bool getIsSimulating(ComponentHandle cmp) = 0;
 	};
 
 

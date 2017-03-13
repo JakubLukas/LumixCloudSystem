@@ -25,13 +25,17 @@ struct SimulatorPlugin LUMIX_FINAL : public PropertyGrid::IPlugin
 
 	void onGUI(PropertyGrid& grid, Lumix::ComponentUID cmp) override
 	{
-		if(cmp.type != CLOUD_TYPE) return;
+		if(cmp.type != CLOUD_TYPE)
+			return;
+
+		auto* scene = static_cast<Lumix::CloudScene*>(cmp.scene);
 
 		ImGui::Separator();
 		ImGui::Checkbox("Update", &m_simulation_updating);
-		auto* scene = static_cast<Lumix::CloudScene*>(cmp.scene);
+		scene->setIsSimulating(cmp.handle, m_simulation_updating);
 		ImGui::SameLine();
-		if(ImGui::Button("Reset")) scene->restartSimulation(cmp.handle);
+		if(ImGui::Button("Reset"))
+			scene->restartSimulation(cmp.handle);
 
 		/*if(m_simulation_updating)
 		{
