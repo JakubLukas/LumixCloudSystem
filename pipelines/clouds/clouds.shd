@@ -1,0 +1,5 @@
+pass "CLOUDS"
+
+alpha_blending "alpha"
+
+texture_slot("Diffuse", "u_texColor")
