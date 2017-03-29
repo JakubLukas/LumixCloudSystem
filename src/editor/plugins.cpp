@@ -37,13 +37,8 @@ struct SimulatorPlugin LUMIX_FINAL : public PropertyGrid::IPlugin
 		if(ImGui::Button("Reset"))
 			scene->restartSimulation(cmp.handle);
 
-		/*if(m_simulation_updating)
-		{
-			ImGui::DragFloat("Timescale", &m_particle_emitter_timescale, 0.01f, 0.01f, 10000.0f);
-			float time_delta = m_app.getWorldEditor()->getEngine().getLastTimeDelta();
-			scene->updateEmitter(cmp.handle, time_delta * m_particle_emitter_timescale);
-			scene->getParticleEmitter(cmp.handle)->drawGizmo(*m_app.getWorldEditor(), *scene);
-		}*/
+		ImGui::DragFloat("Timescale", &m_simulation_timescale, 0.01f, 0.01f, 10.0f);
+		scene->setSimulationTimescale(cmp.handle, m_simulation_timescale);
 	}
 
 

@@ -41,6 +41,7 @@ public:
 	};
 
 	~CloudRenderer();
+	void Clear();
 
 	void Setup(uint width, uint height, uint length);
 	void CalcParticleColors(const bool* cloudSpace);

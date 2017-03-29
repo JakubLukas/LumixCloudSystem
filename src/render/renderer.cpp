@@ -140,6 +140,12 @@ inline static bool intersectRayBox(const Ray& r, const Vec3& boxMin, const Vec3&
 
 CloudRenderer::~CloudRenderer()
 {
+	Clear();
+}
+
+
+void CloudRenderer::Clear()
+{
 	delete[] m_densitySpace;
 	delete[] m_particles;
 }

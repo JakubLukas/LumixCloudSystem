@@ -9,7 +9,8 @@ Simulation::Simulation()
 	: m_width(0)
 	, m_height(0)
 	, m_length(0)
-	, m_actualIndex(0)
+	, m_frontBufIdx(1)
+	, m_backBufIdx(0)
 {
 	m_hum[0] = nullptr;
 	m_hum[1] = nullptr;
@@ -38,7 +39,8 @@ bool Simulation::Setup(uint width, uint height, uint length)
 	m_length = length;
 
 	int size = width * height * length;
-	m_actualIndex = 0;
+	m_backBufIdx = 0;
+	m_frontBufIdx = 1;
 
 	createArray(size, &m_hum[0]);
 	createArray(size, &m_hum[1]);
@@ -66,10 +68,10 @@ void Simulation::InitValues()
 
 	for(int i = 0; i < size; ++i)
 	{
-		m_hum[1 - m_actualIndex][i] = randFloat() < m_pHumInit;
-		m_act[1 - m_actualIndex][i] = m_hum[1 - m_actualIndex][i] && (randFloat() < m_pActInit);
-		m_ext[1 - m_actualIndex][i] = 0;
-		m_cld[1 - m_actualIndex][i] = 0;
+		m_hum[m_frontBufIdx][i] = randFloat() < m_pHumInit;
+		m_act[m_frontBufIdx][i] = m_hum[m_frontBufIdx][i] && (randFloat() < m_pActInit);
+		m_ext[m_frontBufIdx][i] = 1;
+		m_cld[m_frontBufIdx][i] = 0;
 		m_extTimes[i] = 0.0f;
 	}
 }
@@ -112,7 +114,8 @@ void Simulation::Update(float deltaTime)
 		}
 	}
 
-	m_actualIndex = 1 - m_actualIndex;
+	m_frontBufIdx = m_backBufIdx;
+	m_backBufIdx = 1 - m_backBufIdx;
 }
 
 
@@ -120,36 +123,43 @@ void Simulation::Simulate(uint x, uint y, uint z, float deltaTime)
 {
 	int index = GetIndex(x, y, z);
 
-	m_act[m_actualIndex][index] =
-		(!m_act[1 - m_actualIndex][index]
-		&& m_hum[1 - m_actualIndex][index]
-		&& CalcNeighborFunc(m_act[1 - m_actualIndex], x, y, z))
+	m_act[m_backBufIdx][index] =
+		(!m_act[m_frontBufIdx][index]
+			&& m_hum[m_frontBufIdx][index]
+			&& CalcNeighborFunc(m_act[m_frontBufIdx], x, y, z))
 		|| (randFloat() < m_pActUpdate);
 
-	m_hum[m_actualIndex][index] =
-		(m_hum[1 - m_actualIndex][index]
-		&& !m_act[1 - m_actualIndex][index])
+	m_hum[m_backBufIdx][index] =
+		(m_hum[m_frontBufIdx][index]
+			&& !m_act[m_frontBufIdx][index])
 		|| (randFloat() < m_pHumUpdate);
 
-	m_ext[m_actualIndex][index] =
-		(!m_ext[1 - m_actualIndex][index]
-		&& m_cld[1 - m_actualIndex][index]
-		&& CalcNeighborFunc(m_ext[1 - m_actualIndex], x, y, z))
+	m_ext[m_backBufIdx][index] =
+		(!m_ext[m_frontBufIdx][index]
+			&& m_cld[m_frontBufIdx][index]
+			&& CalcNeighborFunc(m_ext[m_frontBufIdx], x, y, z))
 		|| (randFloat() < m_pExtUpdate);
 
-	bool newCld = !m_ext[1 - m_actualIndex][index]
-		&& (m_cld[1 - m_actualIndex][index] || m_act[1 - m_actualIndex][index]);
+	bool newCld = !m_ext[m_frontBufIdx][index]
+		&& (m_cld[m_frontBufIdx][index] || m_act[m_frontBufIdx][index]);
 
-	if (!newCld && m_cld[m_actualIndex][index])
+	//dont edit above !!!
+
+	if(m_ext[m_frontBufIdx][index] && m_cld[m_frontBufIdx][index])//TODO: optimize
 	{
 		m_extTimes[index] += deltaTime;
 		if(m_extTimes[index] > m_tExt)
+		{
 			m_extTimes[index] = 0.0f;
+		}
 		else
-			newCld = !newCld;
+		{
+			m_ext[m_backBufIdx][index] = true;
+			newCld = true;
+		}
 	}
 
-	m_cld[m_actualIndex][index] = newCld;
+	m_cld[m_backBufIdx][index] = newCld;
 }
 
 

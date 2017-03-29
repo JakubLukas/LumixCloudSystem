@@ -26,9 +26,10 @@ public:
 
 	void Update(float deltaTime);
 
-	const bool* GetCloudSpace() const { return m_cld[1 - m_actualIndex]; }
-	const bool* GetActiveSpace() const { return m_act[1 - m_actualIndex]; }
-	const bool* GetHumiditySpace() const { return m_hum[1 - m_actualIndex]; }
+	const bool* GetCloudSpace() const { return m_cld[m_frontBufIdx]; }
+	const bool* GetActiveSpace() const { return m_act[m_frontBufIdx]; }
+	const bool* GetHumiditySpace() const { return m_hum[m_frontBufIdx]; }
+	const float* GetExtinctionTimes() const { return m_extTimes; }
 
 	float GetHumidityProbability() const { return m_pHumUpdate; }
 	void SetHumidityProbability(float value) { m_pHumUpdate = value; }
@@ -49,7 +50,8 @@ private:
 	uint m_length; //z
 
 	uint m_elapsedSteps;
-	uint m_actualIndex;
+	uint m_frontBufIdx;
+	uint m_backBufIdx;
 
 
 	bool* m_hum[2];//TODO: optimize to bit field?

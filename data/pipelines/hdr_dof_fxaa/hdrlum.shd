@@ -1,0 +1,6 @@
+pass "HDR_LUMINANCE"
+pass "HDR_AVG_LUMINANCE"
+pass "LUM1"
+   
+depth_test(false) 
+ 

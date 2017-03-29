@@ -57,6 +57,8 @@ namespace Lumix
 		virtual void restartSimulation(ComponentHandle cmp) = 0;
 		virtual void setIsSimulating(ComponentHandle cmp, const bool isSimulating) = 0;
 		virtual bool getIsSimulating(ComponentHandle cmp) = 0;
+		virtual void setSimulationTimescale(ComponentHandle cmp, const float timescale) = 0;
+		virtual float getSimulationTimescale(ComponentHandle cmp) = 0;
 	};
 
 

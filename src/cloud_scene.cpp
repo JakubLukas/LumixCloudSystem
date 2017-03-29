@@ -39,6 +39,7 @@ struct Cloud
 	CldSim::CloudRenderer renderer;
 	Material* material = nullptr;
 	bool isSimulating = false;
+	float timescale = 1.0f;
 };
 
 
@@ -202,7 +203,7 @@ struct BaseVertex //TODO
 			{
 				if(cloud.isSimulating)
 				{
-					cloud.simulation.Update(time_delta);
+					cloud.simulation.Update(time_delta * cloud.timescale);
 					cloud.renderer.CalcParticleColors(cloud.simulation.GetCloudSpace());
 				}
 			}
@@ -216,25 +217,41 @@ struct BaseVertex //TODO
 			for(const Cloud& cloud : m_clouds)
 			{
 				serializer.write(cloud.entity);
-				//serializer.write(cloud.size);
 				serializer.write(cloud.cellSpace);
+				serializer.write(Vec3((float)cloud.simulation.GetWidth(), (float)cloud.simulation.GetHeight(), (float)cloud.simulation.GetLength()));
+				const Material* material = cloud.material;
+				serializer.writeString(material ? material->getPath().c_str() : "");
+				serializer.write(cloud.timescale);
 			}
 		};
 
 		void deserialize(InputBlob& serializer) override
 		{
+			ResourceManager manager = m_engine.getResourceManager();
+			auto material_manager = manager.get(MATERIAL_TYPE);
+
 			int count = 0;
 			serializer.read(count);
 			m_clouds.reserve(count);
 			for(int i = 0; i < count; ++i)
 			{
-				Cloud cloud;
-				serializer.read(cloud.entity);
-				//serializer.read(cloud.size);
-				serializer.read(cloud.cellSpace);
+				Entity entity;
+				serializer.read(entity);
 
-				m_clouds.insert(cloud.entity, cloud);
-				ComponentHandle cmp = { cloud.entity.index };
+				Cloud& cloud = m_clouds.insert(entity);
+				cloud.entity = entity;
+				serializer.read(cloud.cellSpace);
+				Vec3 dimension;
+				serializer.read(dimension);
+				cloud.simulation.Setup((CldSim::uint)dimension.x, (CldSim::uint)dimension.y, (CldSim::uint)dimension.z);
+				cloud.renderer.Setup((CldSim::uint)dimension.x, (CldSim::uint)dimension.y, (CldSim::uint)dimension.z);
+				char path[MAX_PATH_LENGTH];
+				serializer.readString(path, lengthOf(path));
+				if(path[0] != '\0')
+					cloud.material = static_cast<Material*>(material_manager->load(Path(path)));
+				serializer.read(cloud.timescale);
+
+				ComponentHandle cmp = { entity.index };
 				m_universe.addComponent(cloud.entity, CLOUD_TYPE, this, cmp);
 			}
 		};
@@ -243,23 +260,31 @@ struct BaseVertex //TODO
 		void serializeCloud(ISerializer& serializer, ComponentHandle cmp)
 		{
 			Cloud& cloud = m_clouds[{cmp.index}];
-			//serializer.write("size", cloud.size);
-			serializer.write("cell_count_x", cloud.cellSpace.x);
-			serializer.write("cell_count_y", cloud.cellSpace.y);
-			serializer.write("cell_count_z", cloud.cellSpace.z);
+			serializer.write("cellSpace", cloud.cellSpace);
+			serializer.write("size", Vec3((float)cloud.simulation.GetWidth(), (float)cloud.simulation.GetHeight(), (float)cloud.simulation.GetLength()));
+			const Material* material = cloud.material;
+			serializer.write("material", material ? material->getPath().c_str() : "");
+			serializer.write("timescale", cloud.timescale);
 		}
 
 
 		void deserializeCloud(IDeserializer& serializer, Entity entity, int)
 		{
-			Cloud cloud;
-			cloud.entity = entity;
-			//serializer.read(&cloud.size);
-			serializer.read(&cloud.cellSpace.x);
-			serializer.read(&cloud.cellSpace.y);
-			serializer.read(&cloud.cellSpace.z);
+			ResourceManagerBase* material_manager = m_engine.getResourceManager().get(MATERIAL_TYPE);
 
-			m_clouds.insert(cloud.entity, cloud);
+			Cloud& cloud = m_clouds.insert(entity);
+			cloud.entity = entity;
+			serializer.read(&cloud.cellSpace);
+			Vec3 dimension;
+			serializer.read(&dimension);
+			cloud.simulation.Setup((CldSim::uint)dimension.x, (CldSim::uint)dimension.y, (CldSim::uint)dimension.z);
+			cloud.renderer.Setup((CldSim::uint)dimension.x, (CldSim::uint)dimension.y, (CldSim::uint)dimension.z);
+			char path[MAX_PATH_LENGTH];
+			serializer.read(path, lengthOf(path));
+			if(path[0] != '\0')
+				cloud.material = static_cast<Material*>(material_manager->load(Path(path)));
+			serializer.read(&cloud.timescale);
+
 			ComponentHandle cmp = { cloud.entity.index };
 			m_universe.addComponent(cloud.entity, CLOUD_TYPE, this, cmp);
 		}
@@ -268,10 +293,12 @@ struct BaseVertex //TODO
 		void setCloudSize(ComponentHandle cmp, const Vec3& size) override
 		{
 			Entity entity = { cmp.index };
-			//m_clouds[entity].size = size;
-			//m_clouds[entity].luckyCloud.m_fWidth = size.x;
-			//m_clouds[entity].luckyCloud.m_fHigh = size.y;
-			//m_clouds[entity].luckyCloud.m_fLength = size.z;
+			Cloud& cloud = m_clouds[entity];
+
+			cloud.simulation.Clear();
+			cloud.simulation.Setup((CldSim::uint)size.x, (CldSim::uint)size.y, (CldSim::uint)size.z);
+			cloud.renderer.Clear();
+			cloud.renderer.Setup((CldSim::uint)size.x, (CldSim::uint)size.y, (CldSim::uint)size.z);
 		}
 
 		Vec3 getCloudSize(ComponentHandle cmp) override
@@ -466,6 +493,19 @@ struct BaseVertex //TODO
 		{
 			Entity entity = { cmp.index };
 			return m_clouds[entity].isSimulating;
+		}
+
+
+		void setSimulationTimescale(ComponentHandle cmp, const float timescale) override
+		{
+			Entity entity = { cmp.index };
+			m_clouds[entity].timescale = timescale;
+		}
+
+		float getSimulationTimescale(ComponentHandle cmp) override
+		{
+			Entity entity = { cmp.index };
+			return m_clouds[entity].timescale;
 		}
 
 

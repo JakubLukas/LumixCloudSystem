@@ -30,17 +30,17 @@ static void registerProperties(Lumix::IAllocator& allocator)
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Humidity probability",
 			&CloudScene::getCloudHumidityProbability,
 			&CloudScene::setCloudHumidityProbability,
-			0.0f, 1.0f, 0.05f));
+			0.0f, 0.1f, 0.005f));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Active probability",
 			&CloudScene::getCloudActiveProbability,
 			&CloudScene::setCloudActiveProbability,
-			0.0f, 1.0f, 0.05f));
+			0.0f, 0.1f, 0.005f));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extension probability",
 			&CloudScene::getCloudExtinctionProbability,
 			&CloudScene::setCloudExtinctionProbability,
-			0.0f, 1.0f, 0.05f));
+			0.0f, 0.1f, 0.005f));
 	PropertyRegister::add("cloud",
 		LUMIX_NEW(allocator, DecimalPropertyDescriptor<CloudScene>)("Extinction Time",
 			&CloudScene::getCloudExtinctionTime,

@@ -1,0 +1,2 @@
+pass "MAIN"
+	fs { "HAS_SHADOWMAP" }
