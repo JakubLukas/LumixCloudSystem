@@ -10,6 +10,8 @@
 #include "engine/resource.h"
 #include "engine/resource_manager_base.h"
 #include "engine/resource_manager.h"
+#include "engine/vec.h"
+#include "engine/path.h"
 
 #include "renderer/render_scene.h"
 #include "renderer/material.h"
